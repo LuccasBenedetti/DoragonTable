@@ -1,19 +1,14 @@
 ﻿$WshShell = New-Object -comObject WScript.Shell
 $DesktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
 
-# Update DoragonTable shortcut
+# Target shortcut directly to electron.exe with '.' as argument
 $ShortcutPath = Join-Path $DesktopPath "DoragonTable.lnk"
 $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
-$Shortcut.TargetPath = "wscript.exe"
-$Shortcut.Arguments = """C:\Users\MakerOfSeas\Desktop\DoragonTable\DoragonTable.vbs"""
+$Shortcut.TargetPath = "C:\Users\MakerOfSeas\Desktop\DoragonTable\node_modules\electron\dist\electron.exe"
+$Shortcut.Arguments = "."
 $Shortcut.WorkingDirectory = "C:\Users\MakerOfSeas\Desktop\DoragonTable"
 $Shortcut.Description = "DoragonTable — Virtual Tabletop & AI Master"
+$Shortcut.IconLocation = "C:\Users\MakerOfSeas\Desktop\DoragonTable\node_modules\electron\dist\electron.exe,0"
 $Shortcut.Save()
 
-# Remove obsolete AiRPG shortcut if present
-$OldShortcut = Join-Path $DesktopPath "AiRPG.lnk"
-if (Test-Path $OldShortcut) {
-    Remove-Item $OldShortcut -Force -ErrorAction SilentlyContinue
-}
-
-Write-Output "Atalho DoragonTable atualizado com sucesso na Area de Trabalho!"
+Write-Output "Atalho DoragonTable configurado com sucesso!"
