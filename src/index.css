@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#1e1f22] text-[#dbdee1] font-sans antialiased;
+    user-select: none;
+  }
+}
+
+/* Custom Discord-like scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #2b2d31;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a1b1e;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #111214;
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(88, 101, 242, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(88, 101, 242, 0.8); }
+}
+
+.animate-glow {
+  animation: pulse-glow 2s infinite;
+}

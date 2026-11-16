@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DoragonTable — Virtual Tabletop & AI Dungeon Master</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            doragon: {
+              bg: '#0a0c0f',
+              surface: '#12151c',
+              card: '#191d27',
+              border: '#242a38',
+              crimson: '#e63946',
+              gold: '#d4af37',
+              emerald: '#10b981',
+              text: '#e2e8f0',
+              muted: '#94a3b8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glow-dragon {
+      background: radial-gradient(circle at 50% 30%, rgba(230, 57, 70, 0.18) 0%, transparent 65%);
+    }
+    .grid-pattern {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="bg-[#0a0c0f] text-[#e2e8f0] font-sans antialiased selection:bg-[#e63946] selection:text-white min-h-screen flex flex-col">
+
+  <!-- Glow Background Effect -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] glow-dragon pointer-events-none -z-10"></div>
+
+  <!-- Navbar -->
+  <header class="border-b border-[#242a38]/60 sticky top-0 bg-[#0a0c0f]/85 backdrop-blur-md z-50">
+    <div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Dragon Crest SVG -->
+        <div class="w-11 h-11 rounded-2xl bg-[#1a1215] border-2 border-[#e63946] flex items-center justify-center shadow-lg shadow-[#e63946]/20">
+          <svg viewBox="0 0 100 100" fill="none" class="w-7 h-7">
+            <path d="M50 5 L88 22 C88 58 50 92 50 95 C50 92 12 58 12 22 Z" fill="#1c1f26" stroke="#e63946" stroke-width="3" />
+            <path d="M32 28 C36 16 46 12 48 10 C46 16 45 22 43 28 Z" fill="#d4af37" />
+            <path d="M68 28 C64 16 54 12 52 10 C54 16 55 22 57 28 Z" fill="#d4af37" />
+            <circle cx="45" cy="40" r="3" fill="#d4af37" />
+            <circle cx="55" cy="40" r="3" fill="#d4af37" />
+            <path d="M47 52 L50 49 L53 52" stroke="#e63946" stroke-width="2" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-xl font-black text-white tracking-tight">DoragonTable</span>
+          <span class="ml-2 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#e63946]/20 text-[#e63946] border border-[#e63946]/30">VTT + IA</span>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-[#94a3b8]">
+        <a href="#recursos" class="hover:text-white transition-colors">Recursos</a>
+        <a href="#amigos" class="hover:text-white transition-colors">Amigos & DMs</a>
+        <a href="#ia-master" class="hover:text-white transition-colors">Mestre IA Local</a>
+        <a href="#sistemas" class="hover:text-white transition-colors">D&D e GURPS</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <button onclick="openRegisterModal()" class="px-4 py-2 text-xs font-bold text-white hover:text-[#e63946] transition-colors">
+          Criar Conta
+        </button>
+        <a href="#download" class="px-5 py-2.5 bg-[#e63946] hover:bg-[#d02e3b] text-white text-xs font-extrabold rounded-xl shadow-lg shadow-[#e63946]/25 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Baixar App (.exe)
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main class="flex-1 grid-pattern">
+    <section class="max-w-5xl mx-auto px-6 pt-20 pb-20 text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#161a22] border border-[#2b3345] text-xs font-semibold text-[#e2e8f0] mb-8 shadow-inner">
+        <span class="w-2 h-2 rounded-full bg-[#10b981] animate-pulse"></span>
+        Novo: Servidor Vercel Cloud, Sistema de Amigos e Chat Privado
+      </div>
+
+      <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight leading-[1.1] mb-6">
+        A Plataforma de RPG com <br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#e63946] via-[#ff6b6b] to-[#d4af37]">
+          Mestre IA, Amigos & Servidores.
+        </span>
+      </h1>
+
+      <p class="max-w-2xl mx-auto text-base sm:text-lg text-[#94a3b8] leading-relaxed mb-10">
+        Converse privadamente com seus amigos, monte grupos para campanhas épicas com mapas táticos 3D e deixe a IA local conduzir mundos vivos com memória absoluta de cada detalhe.
+      </p>
+
+      <div id="download" class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+        <button onclick="openRegisterModal()" class="w-full sm:w-auto px-8 py-4 bg-[#e63946] hover:bg-[#d02e3b] text-white font-black text-sm rounded-2xl shadow-xl shadow-[#e63946]/30 flex items-center justify-center gap-3 transition-all transform hover:scale-105">
+          <span>Criar Minha Conta Gratuita</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </button>
+
+        <a href="#" class="w-full sm:w-auto px-7 py-4 bg-[#161a22] hover:bg-[#202633] text-white font-bold text-sm rounded-2xl border border-[#2b3345] flex items-center justify-center gap-2.5 transition-all">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.902-1.799"/></svg>
+          Baixar DoragonTable (.exe)
+        </a>
+      </div>
+
+      <!-- App Interface Preview -->
+      <div class="relative mx-auto rounded-3xl border border-[#2c3344] bg-[#12151c] p-2.5 shadow-2xl overflow-hidden">
+        <div class="rounded-2xl overflow-hidden bg-[#161a22] flex flex-col aspect-[16/10] border border-[#202532] relative text-left">
+          <!-- Titlebar -->
+          <div class="h-10 bg-[#0d0f14] border-b border-[#202532] flex items-center justify-between px-4 select-none">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-[#e63946]"></span>
+              <span class="w-3 h-3 rounded-full bg-[#d4af37]"></span>
+              <span class="w-3 h-3 rounded-full bg-[#10b981]"></span>
+              <span class="text-xs font-mono text-[#94a3b8] ml-2">DoragonTable — Central de Amigos & Campanhas</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-[11px] text-[#10b981] font-bold">
+              <span class="w-2 h-2 rounded-full bg-[#10b981]"></span>
+              Vercel Server Conectado
+            </div>
+          </div>
+
+          <!-- App Mock Body -->
+          <div class="flex-1 flex overflow-hidden">
+            <!-- Sidebar -->
+            <div class="w-16 bg-[#0d0f14] flex flex-col items-center py-4 gap-3 border-r border-[#1a1f28]">
+              <div class="w-11 h-11 rounded-2xl bg-[#1a1215] border-2 border-[#e63946] flex items-center justify-center text-[#e63946] font-bold shadow">
+                🐉
+              </div>
+              <div class="w-8 h-[1px] bg-[#242b38]"></div>
+              <div class="w-11 h-11 rounded-2xl bg-[#191e28] hover:rounded-xl transition-all flex items-center justify-center text-white font-bold">
+                ⚔️
+              </div>
+              <div class="w-11 h-11 rounded-2xl bg-[#191e28] hover:rounded-xl transition-all flex items-center justify-center text-white font-bold">
+                🌆
+              </div>
+            </div>
+
+            <!-- Friends & DMs Column -->
+            <div class="w-56 bg-[#12161f] border-r border-[#1f2533] p-3 hidden sm:flex flex-col justify-between">
+              <div>
+                <div class="bg-[#e63946] text-white px-3 py-2 rounded-xl text-xs font-bold mb-4 shadow">
+                  👥 Amigos (Online)
+                </div>
+                <div class="text-[10px] uppercase font-bold text-[#64748b] px-1 mb-2">Mensagens Diretas</div>
+                <div class="space-y-1 text-xs">
+                  <div class="bg-[#1c222e] text-white p-2 rounded-xl flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-[#10b981]"></span>
+                    <span>Kaelen_Paladino</span>
+                  </div>
+                  <div class="text-[#94a3b8] hover:bg-[#1a1f2a] p-2 rounded-xl flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span>
+                    <span>Sylas_Ladino</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Profile -->
+              <div class="p-2.5 rounded-xl bg-[#0d0f14] border border-[#222838] flex items-center gap-2.5 text-xs">
+                <div class="w-7 h-7 rounded-full bg-[#e63946] flex items-center justify-center text-white font-bold text-[10px]">MD</div>
+                <div class="truncate">
+                  <div class="text-white font-bold truncate">MestreDraconico</div>
+                  <div class="text-[#64748b] text-[10px]">#7749</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main Area -->
+            <div class="flex-1 bg-[#0f1218] p-6 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-4 border-b border-[#202534] mb-4">
+                  <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span class="text-[#10b981]">●</span> Conversa com Kaelen_Paladino
+                  </h3>
+                  <span class="text-xs bg-[#e63946]/15 text-[#e63946] border border-[#e63946]/30 px-2.5 py-1 rounded-lg font-bold">
+                    Convidar para Campanha
+                  </span>
+                </div>
+
+                <div class="space-y-3 text-xs">
+                  <div class="bg-[#141720] p-3 rounded-2xl border border-[#202534] max-w-md">
+                    <div class="font-bold text-white text-[11px] mb-1">Kaelen_Paladino <span class="text-[#64748b] text-[10px] font-normal">18:10</span></div>
+                    <p class="text-[#cbd5e1] leading-relaxed">Mestre, subi o nível do meu Paladino e comprei a armadura nova. Me envia o convite da campanha!</p>
+                  </div>
+                  <div class="bg-[#1e1417] p-3 rounded-2xl border border-[#e63946]/30 max-w-md ml-auto">
+                    <div class="font-bold text-[#e63946] text-[11px] mb-1">Você <span class="text-[#64748b] text-[10px] font-normal">18:12</span></div>
+                    <p class="text-[#cbd5e1] leading-relaxed">Convite enviado! O código da sala na Vercel é <code class="text-[#d4af37] bg-[#12151c] px-1 py-0.5 rounded font-mono font-bold">DRGN-BAROVIA-2026</code>. Te vejo na taverna!</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Input bar -->
+              <div class="bg-[#161a24] p-3 rounded-2xl border border-[#262d3e] text-xs text-[#64748b] flex items-center justify-between">
+                <span>Enviar mensagem privada para @Kaelen...</span>
+                <span class="bg-[#e63946] text-white px-3 py-1 rounded-lg font-bold text-[10px]">Enviar</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="recursos" class="max-w-6xl mx-auto px-6 py-20 border-t border-[#202636]">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-black text-white tracking-tight mb-3">Tudo em Uma Única Mesa</h2>
+        <p class="text-sm text-[#94a3b8] max-w-lg mx-auto">Desenvolvido com tecnologia de ponta para conectar amigos e campanhas de RPG.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="p-6 rounded-2xl bg-[#12151c] border border-[#202534] hover:border-[#e63946]/50 transition-all">
+          <div class="w-12 h-12 rounded-xl bg-[#e63946]/20 text-[#e63946] flex items-center justify-center text-2xl mb-4">
+            🐉
+          </div>
+          <h3 class="text-base font-bold text-white mb-2">Mestre IA com Memória Factual</h3>
+          <p class="text-xs text-[#94a3b8] leading-relaxed">
+            Roda localmente com seus modelos no <strong>Ollama</strong>. A IA registra e consulta a Bíblia de Lore a cada ação para garantir coerência absoluta.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-[#12151c] border border-[#202534] hover:border-[#10b981]/50 transition-all">
+          <div class="w-12 h-12 rounded-xl bg-[#10b981]/20 text-[#10b981] flex items-center justify-center text-2xl mb-4">
+            👥
+          </div>
+          <h3 class="text-base font-bold text-white mb-2">Amigos & Mensagens Privadas</h3>
+          <p class="text-xs text-[#94a3b8] leading-relaxed">
+            Adicione amigos pela Tag, veja quem está online e converse em mensagens diretas privadas. Convide qualquer amigo para suas campanhas com 1 clique.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-[#12151c] border border-[#202534] hover:border-[#d4af37]/50 transition-all">
+          <div class="w-12 h-12 rounded-xl bg-[#d4af37]/20 text-[#d4af37] flex items-center justify-center text-2xl mb-4">
+            ⛰️
+          </div>
+          <h3 class="text-base font-bold text-white mb-2">VTT Tático com Sistema de Altura</h3>
+          <p class="text-xs text-[#94a3b8] leading-relaxed">
+            Grids <strong>hexagonais e quadrados</strong>, paredes que bloqueiam visão conforme altitude e zonas elevadas com bônus de combate automático.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Register Modal -->
+  <div id="registerModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="w-full max-w-md bg-[#13161c] border border-[#293040] rounded-3xl p-8 shadow-2xl relative text-left">
+      <button onclick="closeRegisterModal()" class="absolute top-5 right-5 text-[#64748b] hover:text-white">
+        ✕
+      </button>
+
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-[#1a1215] border border-[#e63946] flex items-center justify-center text-lg">🐉</div>
+        <div>
+          <h3 class="text-base font-black text-white">Criar Conta no DoragonTable</h3>
+          <p class="text-[11px] text-[#94a3b8]">Cadastre-se para jogar e hospedar campanhas</p>
+        </div>
+      </div>
+
+      <form id="regForm" onsubmit="handleWebRegister(event)" class="space-y-4">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Nome de Jogador</label>
+          <input type="text" id="regUsername" required placeholder="Ex: GuerreiroSolitario" class="w-full bg-[#1b1f28] border border-[#2c3444] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-[#64748b] focus:outline-none focus:border-[#e63946]" />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">E-mail</label>
+          <input type="email" id="regEmail" required placeholder="seuemail@exemplo.com" class="w-full bg-[#1b1f28] border border-[#2c3444] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-[#64748b] focus:outline-none focus:border-[#e63946]" />
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Senha</label>
+          <input type="password" id="regPass" required placeholder="••••••••••••" class="w-full bg-[#1b1f28] border border-[#2c3444] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-[#64748b] focus:outline-none focus:border-[#e63946]" />
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-[#e63946] hover:bg-[#d02e3b] text-white text-xs font-black rounded-xl shadow-lg shadow-[#e63946]/25 transition-all mt-2">
+          Concluir Cadastro & Baixar App
+        </button>
+      </form>
+
+      <div id="regSuccess" class="hidden mt-4 p-4 bg-[#10b981]/15 border border-[#10b981]/30 rounded-2xl text-xs text-center space-y-2">
+        <div class="text-[#10b981] font-bold">✓ Conta criada com sucesso!</div>
+        <div class="text-[#e2e8f0] text-[11px]" id="regUserTag"></div>
+        <a href="#download" onclick="closeRegisterModal()" class="inline-block mt-2 px-4 py-2 bg-[#10b981] text-white rounded-xl font-bold">
+          Baixar DoragonTable para Windows
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-[#1e2330] py-8 bg-[#0a0c0f] text-xs text-[#94a3b8] text-center">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>© 2026 DoragonTable. Todos os direitos reservados.</div>
+      <div class="flex items-center gap-6">
+        <a href="#download" class="hover:text-white transition-colors">Download</a>
+        <a href="https://supabase.com" target="_blank" class="hover:text-white transition-colors">Supabase DB</a>
+        <a href="https://vercel.com" target="_blank" class="hover:text-white transition-colors">Vercel Server</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function openRegisterModal() {
+      document.getElementById('registerModal').classList.remove('hidden');
+      document.getElementById('registerModal').classList.add('flex');
+    }
+    function closeRegisterModal() {
+      document.getElementById('registerModal').classList.add('hidden');
+      document.getElementById('registerModal').classList.remove('flex');
+    }
+    function handleWebRegister(e) {
+      e.preventDefault();
+      const user = document.getElementById('regUsername').value;
+      const tag = Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('regForm').classList.add('hidden');
+      document.getElementById('regSuccess').classList.remove('hidden');
+      document.getElementById('regUserTag').innerText = 'Sua Tag oficial: ' + user + '#' + tag;
+    }
+  </script>
+
+</body>
+</html>

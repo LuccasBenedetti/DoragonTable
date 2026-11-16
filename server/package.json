@@ -1,0 +1,11 @@
+{
+  "name": "doragontable-server",
+  "version": "1.0.0",
+  "description": "DoragonTable Vercel Serverless Backend & Website",
+  "scripts": {
+    "start": "node api/campaigns.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.46.2"
+  }
+}
