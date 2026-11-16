@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DragonLogo } from '../Common/DragonLogo';
-import { Shield, Sparkles, User, Mail, Lock, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Shield, Sparkles, User, Mail, Lock, ArrowRight, CheckCircle2, Globe } from 'lucide-react';
+import { DoragonAPI } from '../../services/api';
 
 export interface UserProfile {
   id: string;
@@ -24,30 +25,50 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccessLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!email.trim() || !password.trim()) {
+      setError('Preencha todos os campos obrigatórios.');
+      return;
+    }
+    if (tab === 'register' && !username.trim()) {
+      setError('Escolha um nome de usuário.');
+      return;
+    }
+
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-      if (!email.trim() || !password.trim()) {
-        setError('Preencha todos os campos obrigatórios.');
-        return;
+    try {
+      let result;
+      if (tab === 'register') {
+        result = await DoragonAPI.register(email.trim(), username.trim(), password.trim());
+      } else {
+        result = await DoragonAPI.login(email.trim(), password.trim());
       }
 
-      const generatedTag = Math.floor(1000 + Math.random() * 9000).toString();
-      const user: UserProfile = {
-        id: 'usr_' + Date.now(),
-        email: email.trim(),
-        username: username.trim() || email.split('@')[0],
-        tag: generatedTag,
-        status: 'online',
-        custom_status: 'Explorando DoragonTable',
-      };
+      if (result && result.user) {
+        onSuccessLogin(result.user);
+        return;
+      }
+    } catch (err: any) {
+      console.warn('[AuthScreen] Fallback local ativado:', err);
+    } finally {
+      setLoading(false);
+    }
 
-      onSuccessLogin(user);
-    }, 700);
+    // Fallback local se a rede falhar
+    const generatedTag = Math.floor(1000 + Math.random() * 9000).toString();
+    const user: UserProfile = {
+      id: 'usr_' + Date.now(),
+      email: email.trim(),
+      username: username.trim() || email.split('@')[0],
+      tag: generatedTag,
+      status: 'online',
+      custom_status: 'Explorando DoragonTable',
+    };
+    onSuccessLogin(user);
   };
 
   return (

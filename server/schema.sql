@@ -55,3 +55,13 @@ CREATE TABLE IF NOT EXISTS campaign_members (
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(campaign_id, user_id)
 );
+
+
+-- ========================================================
+-- Políticas e Acesso Livre para o DoragonTable
+-- ========================================================
+ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE friendships DISABLE ROW LEVEL SECURITY;
+ALTER TABLE direct_messages DISABLE ROW LEVEL SECURITY;
+ALTER TABLE campaigns DISABLE ROW LEVEL SECURITY;
+ALTER TABLE campaign_members DISABLE ROW LEVEL SECURITY;

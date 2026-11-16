@@ -1,6 +1,6 @@
 // DoragonTable API Client (Conecta à Vercel ou usa cache local offline)
 
-export const API_BASE_URL = localStorage.getItem('doragontable_api_url') || 'https://doragontable.vercel.app';
+export const API_BASE_URL = localStorage.getItem('doragontable_api_url') || 'https://doragontable-server.vercel.app';
 
 export class DoragonAPI {
   public static setBaseUrl(url: string) {
@@ -8,7 +8,7 @@ export class DoragonAPI {
   }
 
   public static getBaseUrl(): string {
-    return localStorage.getItem('doragontable_api_url') || 'https://doragontable.vercel.app';
+    return localStorage.getItem('doragontable_api_url') || 'https://doragontable-server.vercel.app';
   }
 
   // Verifica se o servidor Vercel está online
