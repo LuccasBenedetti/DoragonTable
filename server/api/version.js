@@ -4,7 +4,7 @@ module.exports = (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   
   res.status(200).json({
-    version: '1.0.0',
+    version: '1.0.1',
     productName: 'DoragonTable',
     releaseDate: '2026-11-18',
     mandatoryUpdate: false,

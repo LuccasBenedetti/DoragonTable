@@ -1,6 +1,6 @@
 {
   "name": "doragontable",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DoragonTable - Virtual Tabletop & AI Dungeon Master",
   "main": "electron/main.js",
   "scripts": {
