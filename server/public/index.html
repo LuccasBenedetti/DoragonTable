@@ -338,29 +338,19 @@
       startInstallerDownload();
     }
     function startInstallerDownload() {
-      // 1. Direct local file download (works when opening index.html or running local server)
-      const localUrl = 'downloads/DoragonTable-Setup.exe';
-      const apiUrl = '/api/download';
-      const githubUrl = 'https://github.com/LuccasBenedetti/DoragonTable/releases/latest/download/DoragonTable-Setup-1.0.0.exe';
+      // If running locally, download direct local file
+      if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        const localLink = document.createElement('a');
+        localLink.href = 'downloads/DoragonTable-Setup.exe';
+        localLink.download = 'DoragonTable-Setup-1.0.0.exe';
+        document.body.appendChild(localLink);
+        localLink.click();
+        document.body.removeChild(localLink);
+        return;
+      }
 
-      const link = document.createElement('a');
-      link.href = localUrl;
-      link.download = 'DoragonTable-Setup.exe';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // 2. Fallback to API redirect or GitHub releases if local file isn't reachable
-      setTimeout(() => {
-        try {
-          const fallback = document.createElement('a');
-          fallback.href = apiUrl;
-          fallback.target = '_self';
-          document.body.appendChild(fallback);
-          fallback.click();
-          document.body.removeChild(fallback);
-        } catch {}
-      }, 1000);
+      // In production web (Vercel), call download endpoint
+      window.location.href = '/api/download';
     }
   </script>
 
