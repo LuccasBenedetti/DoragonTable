@@ -48,12 +48,12 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in">
-      <div className="w-full max-w-3xl bg-[#313338] rounded-2xl border border-[#3f4147] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden text-[#dbdee1]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in select-none">
+      <div className="w-full max-w-3xl bg-[#11141b] rounded-2xl border border-[#232938] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden text-[#e2e8f0]">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-[#2b2d31] border-b border-[#1f2023]">
+        <div className="flex items-center justify-between p-4 bg-[#151923] border-b border-[#1f2533]">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border-2 border-[#5865f2] flex items-center justify-center font-bold text-lg text-white">
+            <div className="w-12 h-12 rounded-xl bg-[#1d222e] border-2 border-[#e63946] flex items-center justify-center font-bold text-lg text-white shadow-md">
               {sheet.avatar ? (
                 <img src={sheet.avatar} alt={sheet.name} className="w-full h-full object-cover rounded-xl" />
               ) : (
@@ -66,18 +66,18 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
                   type="text"
                   value={sheet.name}
                   onChange={(e) => setSheet({ ...sheet, name: e.target.value })}
-                  className="bg-transparent font-bold text-lg text-white border-b border-transparent hover:border-[#5865f2] focus:border-[#5865f2] focus:outline-none"
+                  className="bg-transparent font-bold text-lg text-white border-b border-transparent hover:border-[#e63946] focus:border-[#e63946] focus:outline-none"
                 />
-                <span className="text-[11px] font-semibold bg-[#5865f2] text-white px-2 py-0.5 rounded-full uppercase">
+                <span className="text-[10px] font-extrabold bg-[#e63946] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
                   {sheet.ruleset.toUpperCase()}
                 </span>
                 {sheet.isNPC && (
-                  <span className="text-[11px] font-semibold bg-[#eab308] text-black px-2 py-0.5 rounded-full uppercase">
+                  <span className="text-[10px] font-extrabold bg-[#d4af37] text-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                     NPC
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#949ba4]">
+              <p className="text-xs text-[#94a3b8]">
                 {sheet.ruleset === 'dnd5e'
                   ? `${sheet.dnd?.race || 'Humano'} ${sheet.dnd?.class || 'Guerreiro'} Nv. ${sheet.dnd?.level || 1}`
                   : `Total de Pontos: ${sheet.gurps?.pointTotal || 100} pts`}
@@ -87,50 +87,50 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-[#35373c] text-[#949ba4] hover:text-white"
+            className="p-1.5 rounded-lg hover:bg-[#202634] text-[#94a3b8] hover:text-white transition-colors"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex border-b border-[#2b2d31] bg-[#2b2d31]/50 px-4">
+        <div className="flex border-b border-[#1f2533] bg-[#131720] px-4">
           <button
             onClick={() => setActiveTab('main')}
-            className={`py-2.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition-colors ${
+            className={`py-2.5 px-4 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors ${
               activeTab === 'main'
-                ? 'border-[#5865f2] text-white'
-                : 'border-transparent text-[#949ba4] hover:text-[#dbdee1]'
+                ? 'border-[#e63946] text-white'
+                : 'border-transparent text-[#94a3b8] hover:text-white'
             }`}
           >
             <Shield size={14} /> Atributos & Combate
           </button>
           <button
             onClick={() => setActiveTab('skills')}
-            className={`py-2.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition-colors ${
+            className={`py-2.5 px-4 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors ${
               activeTab === 'skills'
-                ? 'border-[#5865f2] text-white'
-                : 'border-transparent text-[#949ba4] hover:text-[#dbdee1]'
+                ? 'border-[#e63946] text-white'
+                : 'border-transparent text-[#94a3b8] hover:text-white'
             }`}
           >
             <Award size={14} /> Perícias & Vantagens
           </button>
           <button
             onClick={() => setActiveTab('inventory')}
-            className={`py-2.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition-colors ${
+            className={`py-2.5 px-4 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors ${
               activeTab === 'inventory'
-                ? 'border-[#5865f2] text-white'
-                : 'border-transparent text-[#949ba4] hover:text-[#dbdee1]'
+                ? 'border-[#e63946] text-white'
+                : 'border-transparent text-[#94a3b8] hover:text-white'
             }`}
           >
             <Backpack size={14} /> Inventário
           </button>
           <button
             onClick={() => setActiveTab('bio')}
-            className={`py-2.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition-colors ${
+            className={`py-2.5 px-4 text-xs font-bold border-b-2 flex items-center gap-1.5 transition-colors ${
               activeTab === 'bio'
-                ? 'border-[#5865f2] text-white'
-                : 'border-transparent text-[#949ba4] hover:text-[#dbdee1]'
+                ? 'border-[#e63946] text-white'
+                : 'border-transparent text-[#94a3b8] hover:text-white'
             }`}
           >
             <BookOpen size={14} /> História & Anotações
@@ -143,33 +143,33 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
             <>
               {/* Vital Stats Bar */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-[#2b2d31] p-3 rounded-xl border border-[#3f4147] flex items-center justify-between">
+                <div className="bg-[#151923] p-3 rounded-xl border border-[#232938] flex items-center justify-between shadow-sm">
                   <div>
-                    <span className="text-[11px] font-bold text-[#949ba4] uppercase flex items-center gap-1">
-                      <Heart size={13} className="text-[#da373c]" /> Pontos de Vida (PV)
+                    <span className="text-[10px] font-bold text-[#94a3b8] uppercase flex items-center gap-1">
+                      <Heart size={13} className="text-[#e63946]" /> Pontos de Vida (PV)
                     </span>
                     <div className="flex items-center gap-1 mt-1">
                       <input
                         type="number"
                         value={sheet.hp}
                         onChange={(e) => setSheet({ ...sheet, hp: parseInt(e.target.value) || 0 })}
-                        className="w-12 bg-[#1e1f22] p-1 rounded font-bold text-center text-white"
+                        className="w-12 bg-[#0d0f14] p-1 rounded-lg font-bold text-center text-white border border-[#232938]"
                       />
-                      <span className="text-[#949ba4]">/</span>
+                      <span className="text-[#94a3b8]">/</span>
                       <input
                         type="number"
                         value={sheet.maxHp}
                         onChange={(e) => setSheet({ ...sheet, maxHp: parseInt(e.target.value) || 1 })}
-                        className="w-12 bg-[#1e1f22] p-1 rounded font-bold text-center text-[#949ba4]"
+                        className="w-12 bg-[#0d0f14] p-1 rounded-lg font-bold text-center text-[#94a3b8] border border-[#232938]"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-[#2b2d31] p-3 rounded-xl border border-[#3f4147] flex items-center justify-between">
+                <div className="bg-[#151923] p-3 rounded-xl border border-[#232938] flex items-center justify-between shadow-sm">
                   <div>
-                    <span className="text-[11px] font-bold text-[#949ba4] uppercase flex items-center gap-1">
-                      <Zap size={13} className="text-[#eab308]" />
+                    <span className="text-[10px] font-bold text-[#94a3b8] uppercase flex items-center gap-1">
+                      <Zap size={13} className="text-[#d4af37]" />
                       {sheet.ruleset === 'gurps' ? 'Pontos de Fadiga (FP)' : 'Mana / Energia'}
                     </span>
                     <div className="flex items-center gap-1 mt-1">
@@ -177,30 +177,30 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
                         type="number"
                         value={sheet.energy}
                         onChange={(e) => setSheet({ ...sheet, energy: parseInt(e.target.value) || 0 })}
-                        className="w-12 bg-[#1e1f22] p-1 rounded font-bold text-center text-white"
+                        className="w-12 bg-[#0d0f14] p-1 rounded-lg font-bold text-center text-white border border-[#232938]"
                       />
-                      <span className="text-[#949ba4]">/</span>
+                      <span className="text-[#94a3b8]">/</span>
                       <input
                         type="number"
                         value={sheet.maxEnergy}
                         onChange={(e) => setSheet({ ...sheet, maxEnergy: parseInt(e.target.value) || 1 })}
-                        className="w-12 bg-[#1e1f22] p-1 rounded font-bold text-center text-[#949ba4]"
+                        className="w-12 bg-[#0d0f14] p-1 rounded-lg font-bold text-center text-[#94a3b8] border border-[#232938]"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-[#2b2d31] p-3 rounded-xl border border-[#3f4147] flex items-center justify-between">
+                <div className="bg-[#151923] p-3 rounded-xl border border-[#232938] flex items-center justify-between shadow-sm">
                   <div>
-                    <span className="text-[11px] font-bold text-[#949ba4] uppercase flex items-center gap-1">
-                      <Shield size={13} className="text-[#5865f2]" />
+                    <span className="text-[10px] font-bold text-[#94a3b8] uppercase flex items-center gap-1">
+                      <Shield size={13} className="text-[#3b82f6]" />
                       {sheet.ruleset === 'gurps' ? 'Esquiva / Defesa' : 'Classe de Armadura (CA)'}
                     </span>
                     <input
                       type="number"
                       value={sheet.defense}
                       onChange={(e) => setSheet({ ...sheet, defense: parseInt(e.target.value) || 10 })}
-                      className="w-14 bg-[#1e1f22] p-1 rounded font-bold text-center text-white mt-1 text-base"
+                      className="w-14 bg-[#0d0f14] p-1 rounded-lg font-bold text-center text-white mt-1 text-base border border-[#232938]"
                     />
                   </div>
                 </div>
@@ -209,7 +209,7 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
               {/* D&D 5e Attributes */}
               {sheet.ruleset === 'dnd5e' && sheet.dnd && (
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#949ba4] mb-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748b] mb-2">
                     Atributos Principais (d20)
                   </h3>
                   <div className="grid grid-cols-6 gap-2">
@@ -226,21 +226,21 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
                       return (
                         <div
                           key={key}
-                          className="bg-[#2b2d31] p-2.5 rounded-xl border border-[#3f4147] text-center flex flex-col items-center hover:border-[#5865f2] group transition-all"
+                          className="bg-[#151923] p-2.5 rounded-xl border border-[#232938] text-center flex flex-col items-center hover:border-[#e63946] group transition-all"
                         >
-                          <span className="text-[11px] font-bold text-[#949ba4]">{label}</span>
+                          <span className="text-[10px] font-extrabold text-[#94a3b8]">{label}</span>
                           <span className="text-lg font-black text-white">{mod}</span>
                           <input
                             type="number"
                             value={score}
                             onChange={(e) => handleStatChange(key, parseInt(e.target.value) || 10)}
-                            className="w-10 text-[11px] bg-[#1e1f22] text-center text-[#949ba4] rounded mt-1"
+                            className="w-10 text-[10px] bg-[#0d0f14] text-center text-[#94a3b8] rounded mt-1 border border-[#232938]"
                           />
                           <button
                             onClick={() => onRollCheck(`1d20${mod}`, `Teste de ${label}`)}
-                            className="mt-2 text-[10px] bg-[#35373c] group-hover:bg-[#5865f2] text-white px-2 py-1 rounded flex items-center gap-1"
+                            className="mt-2 text-[10px] bg-[#222836] group-hover:bg-[#e63946] text-white px-2 py-1 rounded-lg flex items-center gap-1 font-bold transition-colors"
                           >
-                            <Dices size={11} /> Rolar
+                            <Dices size={10} /> Rolar
                           </button>
                         </div>
                       );
@@ -253,7 +253,7 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
               {sheet.ruleset === 'gurps' && sheet.gurps && (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#949ba4] mb-2">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748b] mb-2">
                       Atributos Primários GURPS (3d6 Menor ou Igual)
                     </h3>
                     <div className="grid grid-cols-4 gap-3">
@@ -267,22 +267,22 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
                         return (
                           <div
                             key={key}
-                            className="bg-[#2b2d31] p-3 rounded-xl border border-[#3f4147] text-center flex flex-col items-center hover:border-[#5865f2] group transition-all"
+                            className="bg-[#151923] p-3 rounded-xl border border-[#232938] text-center flex flex-col items-center hover:border-[#e63946] group transition-all"
                           >
-                            <span className="text-xs font-bold text-[#949ba4]">{label}</span>
+                            <span className="text-xs font-extrabold text-[#94a3b8]">{label}</span>
                             <div className="flex items-center gap-2 mt-1">
                               <input
                                 type="number"
                                 value={score}
                                 onChange={(e) => handleStatChange(key, parseInt(e.target.value) || 10)}
-                                className="w-12 text-xl font-black bg-[#1e1f22] text-center text-white rounded p-1"
+                                className="w-12 text-xl font-black bg-[#0d0f14] text-center text-white rounded-lg p-1 border border-[#232938]"
                               />
                             </div>
                             <button
                               onClick={() => onRollCheck(`3d6`, `Teste de ${label.split(' ')[0]}`, score)}
-                              className="mt-2 text-[11px] bg-[#35373c] group-hover:bg-[#5865f2] text-white px-2.5 py-1 rounded-md flex items-center gap-1 font-semibold"
+                              className="mt-2 text-[10px] bg-[#222836] group-hover:bg-[#e63946] text-white px-2.5 py-1 rounded-lg flex items-center gap-1 font-bold transition-colors"
                             >
-                              <Dices size={12} /> Testar (≤{score})
+                              <Dices size={11} /> Testar (≤{score})
                             </button>
                           </div>
                         );
@@ -291,24 +291,24 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
                   </div>
 
                   {/* Secondary stats */}
-                  <div className="grid grid-cols-4 gap-2 bg-[#2b2d31] p-3 rounded-xl border border-[#3f4147] text-xs">
+                  <div className="grid grid-cols-4 gap-2 bg-[#151923] p-3 rounded-xl border border-[#232938] text-xs">
                     <div>
-                      <span className="text-[#949ba4]">Dano GdP:</span>{' '}
+                      <span className="text-[#94a3b8]">Dano GdP:</span>{' '}
                       <span className="font-bold text-white">{sheet.gurps.thrustDmg || '1d-2'}</span>
                     </div>
                     <div>
-                      <span className="text-[#949ba4]">Dano Golpe:</span>{' '}
+                      <span className="text-[#94a3b8]">Dano Golpe:</span>{' '}
                       <span className="font-bold text-white">{sheet.gurps.swingDmg || '1d-1'}</span>
                     </div>
                     <div>
-                      <span className="text-[#949ba4]">Deslocamento:</span>{' '}
+                      <span className="text-[#94a3b8]">Deslocamento:</span>{' '}
                       <span className="font-bold text-white">{sheet.gurps.basicMove || 5} m/s</span>
                     </div>
                     <div>
-                      <span className="text-[#949ba4]">Esquiva:</span>{' '}
+                      <span className="text-[#94a3b8]">Esquiva:</span>{' '}
                       <button
                         onClick={() => onRollCheck(`3d6`, 'Esquiva GURPS', sheet.gurps?.dodge || 8)}
-                        className="font-bold text-[#5865f2] hover:underline"
+                        className="font-bold text-[#e63946] hover:underline"
                       >
                         {sheet.gurps.dodge || 8}
                       </button>
@@ -322,7 +322,7 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
           {activeTab === 'skills' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#949ba4]">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748b]">
                   Lista de Perícias & Especialidades
                 </h3>
               </div>
@@ -332,17 +332,17 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
                   {sheet.gurps.skills.map((skill, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-2.5 bg-[#2b2d31] rounded-lg border border-[#3f4147] hover:border-[#5865f2]"
+                      className="flex items-center justify-between p-2.5 bg-[#151923] rounded-xl border border-[#232938] hover:border-[#e63946]"
                     >
                       <div>
                         <div className="text-xs font-bold text-white">{skill.name}</div>
-                        <div className="text-[10px] text-[#949ba4]">{skill.relLevel}</div>
+                        <div className="text-[10px] text-[#94a3b8]">{skill.relLevel}</div>
                       </div>
                       <button
                         onClick={() => onRollCheck('3d6', `Perícia: ${skill.name}`, skill.level)}
-                        className="bg-[#35373c] hover:bg-[#5865f2] text-white px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1"
+                        className="bg-[#222836] hover:bg-[#e63946] text-white px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
                       >
-                        <Dices size={12} /> {skill.level}
+                        <Dices size={11} /> {skill.level}
                       </button>
                     </div>
                   ))}
@@ -363,12 +363,12 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
                   ].map((s, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-2 bg-[#2b2d31] rounded-lg border border-[#3f4147]"
+                      className="flex items-center justify-between p-2 bg-[#151923] rounded-xl border border-[#232938]"
                     >
-                      <span className="text-[#dbdee1]">{s.name}</span>
+                      <span className="text-[#e2e8f0] font-medium">{s.name}</span>
                       <button
                         onClick={() => onRollCheck(`1d20${s.mod}`, s.name)}
-                        className="bg-[#35373c] hover:bg-[#5865f2] text-white px-2 py-0.5 rounded font-bold"
+                        className="bg-[#222836] hover:bg-[#e63946] text-white px-2 py-0.5 rounded-md font-bold transition-colors"
                       >
                         {s.mod}
                       </button>
@@ -381,27 +381,27 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
 
           {activeTab === 'inventory' && (
             <div className="space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#949ba4]">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748b]">
                 Equipamento & Itens Transportados
               </h3>
               <div className="space-y-2">
                 {[
-                  { name: 'Espada Longa', qty: 1, weight: '1.5 kg', desc: '1d8 cortante / Dano de balanço' },
+                  { name: 'Espada Longa', qty: 1, weight: '1.5 kg', desc: '1d8 cortante' },
                   { name: 'Poção de Cura', qty: 2, weight: '0.5 kg', desc: 'Recupera 2d4+2 PV' },
                   { name: 'Corda de Seda (15m)', qty: 1, weight: '2 kg', desc: 'Resistente a 150kg' },
                   { name: 'Tochas', qty: 3, weight: '1.5 kg', desc: 'Ilumina 6m de raio' },
                 ].map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-2.5 bg-[#2b2d31] rounded-lg border border-[#3f4147]"
+                    className="flex items-center justify-between p-2.5 bg-[#151923] rounded-xl border border-[#232938]"
                   >
                     <div>
                       <div className="text-xs font-bold text-white">
-                        {item.name} <span className="text-[#949ba4]">x{item.qty}</span>
+                        {item.name} <span className="text-[#94a3b8]">x{item.qty}</span>
                       </div>
-                      <div className="text-[11px] text-[#949ba4]">{item.desc}</div>
+                      <div className="text-[10px] text-[#94a3b8]">{item.desc}</div>
                     </div>
-                    <span className="text-xs text-[#949ba4]">{item.weight}</span>
+                    <span className="text-xs text-[#94a3b8] font-mono">{item.weight}</span>
                   </div>
                 ))}
               </div>
@@ -410,7 +410,7 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
 
           {activeTab === 'bio' && (
             <div className="space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#949ba4]">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748b]">
                 Biografia & Anotações do Jogador
               </h3>
               <textarea
@@ -418,17 +418,17 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
                 onChange={(e) => setSheet({ ...sheet, bio: e.target.value })}
                 rows={6}
                 placeholder="Escreva o histórico do personagem, motivações, laços e objetivos..."
-                className="w-full bg-[#1e1f22] p-3 rounded-xl border border-[#3f4147] text-xs text-[#dbdee1] focus:outline-none focus:border-[#5865f2] resize-none"
+                className="w-full bg-[#0d0f14] p-3 rounded-xl border border-[#232938] text-xs text-[#e2e8f0] focus:outline-none focus:border-[#e63946] resize-none"
               />
             </div>
           )}
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-end gap-3 p-4 bg-[#2b2d31] border-t border-[#1f2023]">
+        <div className="flex items-center justify-end gap-3 p-4 bg-[#151923] border-t border-[#1f2533]">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-xs font-semibold text-[#949ba4] hover:text-white"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-[#94a3b8] hover:text-white transition-colors"
           >
             Cancelar
           </button>
@@ -437,7 +437,7 @@ export const CharacterSheetModal: React.FC<CharacterSheetModalProps> = ({
               onSave(sheet);
               onClose();
             }}
-            className="px-5 py-2 rounded-lg text-xs font-semibold bg-[#5865f2] hover:bg-[#4752c4] text-white shadow-md"
+            className="px-5 py-2 rounded-xl text-xs font-bold bg-[#e63946] hover:bg-[#d02e3b] text-white shadow-md shadow-[#e63946]/30 transition-all"
           >
             Salvar Alterações
           </button>

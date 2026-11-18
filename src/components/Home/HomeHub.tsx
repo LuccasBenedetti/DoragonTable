@@ -14,7 +14,8 @@ import {
   Shield,
   Circle,
   Clock,
-  Compass
+  Compass,
+  LogOut
 } from 'lucide-react';
 import { Campaign } from '../../types';
 
@@ -42,6 +43,7 @@ interface HomeHubProps {
   campaigns: Campaign[];
   onSelectCampaign: (campaignId: string) => void;
   onInviteFriendToCampaign: (friend: FriendItem, campaignId: string) => void;
+  onLogout?: () => void;
 }
 
 export const HomeHub: React.FC<HomeHubProps> = ({
@@ -49,6 +51,7 @@ export const HomeHub: React.FC<HomeHubProps> = ({
   campaigns,
   onSelectCampaign,
   onInviteFriendToCampaign,
+  onLogout,
 }) => {
   // Navigation: 'friends' or friendId for active DM
   const [activeChatFriendId, setActiveChatFriendId] = useState<string | null>(null);
@@ -253,6 +256,33 @@ export const HomeHub: React.FC<HomeHubProps> = ({
                 </button>
               );
             })}
+        </div>
+
+        {/* User Profile Bar at Bottom of HomeHub Sidebar */}
+        <div className="h-14 bg-[#101318] px-3 flex items-center justify-between border-t border-[#1f242e] select-none">
+          <div className="flex items-center gap-2.5 p-1 rounded-xl flex-1 min-w-0 mr-1">
+            <div className="relative">
+              <div className="w-8 h-8 rounded-full bg-[#252b38] flex items-center justify-center font-bold text-xs text-white border border-[#333a4a]">
+                {currentUser.username.substring(0, 2).toUpperCase()}
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#10b981] rounded-full border-2 border-[#101318]" />
+            </div>
+
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-bold text-white truncate">{currentUser.username}</span>
+              <span className="text-[10px] text-[#64748b] truncate font-mono">#{currentUser.tag}</span>
+            </div>
+          </div>
+
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="p-1.5 rounded-lg hover:bg-[#2b181a] hover:text-[#e63946] text-[#64748b] transition-colors"
+              title="Desconectar / Sair da Conta"
+            >
+              <LogOut size={15} />
+            </button>
+          )}
         </div>
       </div>
 

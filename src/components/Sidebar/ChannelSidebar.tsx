@@ -14,7 +14,9 @@ import {
   Headphones, 
   Compass,
   UserPlus,
-  Share2
+  Share2,
+  ChevronLeft,
+  LogOut
 } from 'lucide-react';
 import { UserProfile } from '../Auth/AuthScreen';
 
@@ -29,6 +31,8 @@ interface ChannelSidebarProps {
   onOpenGMScreen: () => void;
   onOpenCharacterSheet: () => void;
   onOpenInviteModal: () => void;
+  onCollapse?: () => void;
+  onLogout?: () => void;
 }
 
 export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
@@ -42,15 +46,17 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
   onOpenGMScreen,
   onOpenCharacterSheet,
   onOpenInviteModal,
+  onCollapse,
+  onLogout,
 }) => {
   const isAIMode = campaign.gameMode === 'ai_master';
 
   return (
     <div className="w-60 h-full bg-[#14171e] flex flex-col select-none border-r border-[#1f242e] z-10">
       {/* Campaign Header Banner */}
-      <div className="h-14 px-4 flex items-center justify-between border-b border-[#1f242e] shadow-sm hover:bg-[#1a1f28] cursor-pointer transition-colors">
-        <div className="flex flex-col truncate">
-          <span className="font-extrabold text-sm text-white truncate max-w-[140px]">
+      <div className="h-14 px-3 flex items-center justify-between border-b border-[#1f242e] shadow-sm hover:bg-[#1a1f28] transition-colors">
+        <div className="flex flex-col truncate flex-1 min-w-0 pr-2">
+          <span className="font-extrabold text-sm text-white truncate">
             {campaign.name}
           </span>
           <span className="text-[10px] text-[#e63946] font-bold uppercase tracking-wider">
@@ -58,28 +64,40 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
           </span>
         </div>
 
-        {/* Mode Toggle Button */}
-        <button
-          onClick={() => onToggleGameMode(isAIMode ? 'multiplayer' : 'ai_master')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all shadow ${
-            isAIMode
-              ? 'bg-[#e63946] text-white hover:bg-[#d02e3b]'
-              : 'bg-[#10b981] text-white hover:bg-[#059669]'
-          }`}
-          title="Alternar entre Mestre IA e Multijogador"
-        >
-          {isAIMode ? (
-            <>
-              <Bot size={11} />
-              <span>Modo IA</span>
-            </>
-          ) : (
-            <>
-              <Users size={11} />
-              <span>Multiplayer</span>
-            </>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Mode Toggle Button */}
+          <button
+            onClick={() => onToggleGameMode(isAIMode ? 'multiplayer' : 'ai_master')}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-all shadow ${
+              isAIMode
+                ? 'bg-[#e63946] text-white hover:bg-[#d02e3b]'
+                : 'bg-[#10b981] text-white hover:bg-[#059669]'
+            }`}
+            title="Alternar entre Mestre IA e Multijogador"
+          >
+            {isAIMode ? (
+              <>
+                <Bot size={11} />
+                <span>IA</span>
+              </>
+            ) : (
+              <>
+                <Users size={11} />
+                <span>Multi</span>
+              </>
+            )}
+          </button>
+
+          {onCollapse && (
+            <button
+              onClick={onCollapse}
+              className="p-1 rounded-lg hover:bg-[#252c3a] text-[#64748b] hover:text-white transition-colors"
+              title="Recolher Barra Lateral (Ctrl+B)"
+            >
+              <ChevronLeft size={16} />
+            </button>
           )}
-        </button>
+        </div>
       </div>
 
       {/* Quick Action Navigation Bar */}
@@ -226,6 +244,15 @@ export const ChannelSidebar: React.FC<ChannelSidebarProps> = ({
           >
             <Settings size={15} />
           </button>
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="p-1.5 rounded-lg hover:bg-[#2b181a] hover:text-[#e63946] text-[#64748b] transition-colors"
+              title="Desconectar / Sair da Conta"
+            >
+              <LogOut size={15} />
+            </button>
+          )}
         </div>
       </div>
     </div>

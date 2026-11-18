@@ -6,12 +6,10 @@ import {
   Bot, 
   Crown, 
   Sparkles, 
-  ChevronDown, 
-  PlusCircle, 
-  ShieldAlert, 
-  Flame, 
   Mountain,
-  CornerDownRight
+  CornerDownRight,
+  Flame,
+  Shield
 } from 'lucide-react';
 
 interface ChatAreaProps {
@@ -40,7 +38,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const [inputText, setInputText] = useState('');
   const [selectedCharId, setSelectedCharId] = useState<string>(activeCharacterId || characters[0]?.id || '');
   const [messageType, setMessageType] = useState<ChatMessage['type']>('speech');
-  const [diceInput, setDiceInput] = useState('');
   const [showDiceQuickBar, setShowDiceQuickBar] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -48,6 +45,13 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isGeneratingAI]);
+
+  // Keep selectedCharId in sync with activeCharacterId when changed externally (e.g. from token bar)
+  useEffect(() => {
+    if (activeCharacterId) {
+      setSelectedCharId(activeCharacterId);
+    }
+  }, [activeCharacterId]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,28 +80,17 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const selectedChar = characters.find((c) => c.id === selectedCharId) || characters[0];
 
   return (
-    <div className="flex-1 h-full flex flex-col bg-[#313338] overflow-hidden">
-      {/* Channel Header */}
-      <div className="h-12 px-4 flex items-center justify-between border-b border-[#1f2023] shadow-sm bg-[#313338] z-10">
-        <div className="flex items-center gap-2">
-          <span className="text-xl text-[#80848e]">#</span>
-          <span className="font-bold text-white text-sm">{channelName}</span>
-          {isAIMasterMode && (
-            <span className="ml-2 flex items-center gap-1 text-[11px] font-semibold bg-[#5865f2]/20 text-[#5865f2] px-2 py-0.5 rounded-full border border-[#5865f2]/40">
-              <Bot size={12} /> Mestre IA Ativo
-            </span>
-          )}
-        </div>
-      </div>
-
+    <div className="flex-1 h-full flex flex-col bg-[#11141a] text-[#e2e8f0] overflow-hidden">
       {/* Messages Scroll View */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center text-[#949ba4]">
-            <Sparkles size={36} className="text-[#5865f2] mb-2 animate-bounce" />
-            <h3 className="text-base font-bold text-white">Início da Cena #{channelName}</h3>
-            <p className="text-xs max-w-sm mt-1">
-              Envie uma mensagem ou execute uma ação para iniciar a narrativa da sessão de RPG.
+          <div className="flex flex-col items-center justify-center h-full text-center text-[#64748b] py-8">
+            <div className="w-12 h-12 rounded-2xl bg-[#e63946]/10 text-[#e63946] flex items-center justify-center mb-3 border border-[#e63946]/20">
+              <Sparkles size={24} />
+            </div>
+            <h3 className="text-sm font-bold text-white">Início da Cena #{channelName}</h3>
+            <p className="text-xs max-w-xs mt-1 text-[#94a3b8]">
+              Envie uma fala, ação ou rolagem de dados para que a narrativa tome vida.
             </p>
           </div>
         ) : (
@@ -108,20 +101,20 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             return (
               <div
                 key={msg.id}
-                className={`flex gap-3 group px-2 py-1.5 rounded-lg transition-colors ${
+                className={`flex gap-3 px-3 py-2.5 rounded-xl transition-all ${
                   isAI
-                    ? 'bg-[#2b2d31]/50 border-l-4 border-[#5865f2]'
+                    ? 'bg-[#181c26]/90 border-l-4 border-[#e63946] shadow-sm'
                     : isGM
-                    ? 'bg-[#2b2d31]/30 border-l-4 border-[#f0b232]'
-                    : 'hover:bg-[#2e3035]'
+                    ? 'bg-[#181c26]/60 border-l-4 border-[#d4af37]'
+                    : 'bg-[#141820]/40 hover:bg-[#181c24]/70 border border-[#1e2330]'
                 }`}
               >
                 {/* Avatar */}
-                <div className="w-10 h-10 rounded-full bg-[#1e1f22] flex-shrink-0 flex items-center justify-center font-bold text-sm text-white overflow-hidden border border-[#3f4147]">
+                <div className="w-9 h-9 rounded-xl bg-[#1d222e] flex-shrink-0 flex items-center justify-center font-bold text-xs text-white overflow-hidden border border-[#2c3344] shadow-sm">
                   {msg.senderAvatar ? (
                     <img src={msg.senderAvatar} alt={msg.senderName} className="w-full h-full object-cover" />
                   ) : isAI ? (
-                    <Bot size={20} className="text-[#5865f2]" />
+                    <Flame size={18} className="text-[#e63946]" />
                   ) : (
                     msg.senderName.substring(0, 2).toUpperCase()
                   )}
@@ -130,76 +123,76 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-white hover:underline cursor-pointer">
+                    <span className="font-bold text-xs text-white hover:underline cursor-pointer">
                       {msg.senderName}
                     </span>
                     {isAI && (
-                      <span className="bg-[#5865f2] text-white text-[10px] font-bold px-1.5 py-0.2 rounded uppercase flex items-center gap-0.5">
+                      <span className="bg-[#e63946] text-white text-[9px] font-black px-1.5 py-0.2 rounded uppercase flex items-center gap-0.5 tracking-wider">
                         <Bot size={10} /> IA MESTRE
                       </span>
                     )}
                     {isGM && !isAI && (
-                      <span className="bg-[#f0b232] text-black text-[10px] font-bold px-1.5 py-0.2 rounded uppercase flex items-center gap-0.5">
+                      <span className="bg-[#d4af37] text-black text-[9px] font-black px-1.5 py-0.2 rounded uppercase flex items-center gap-0.5 tracking-wider">
                         <Crown size={10} /> MESTRE
                       </span>
                     )}
-                    <span className="text-[10px] text-[#949ba4]">
+                    <span className="text-[10px] text-[#64748b]">
                       {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
 
                   {/* Narration Style */}
                   {msg.type === 'narration' && (
-                    <div className="mt-1 text-sm text-[#dbdee1] leading-relaxed italic bg-[#2b2d31]/70 p-3 rounded-xl border border-[#3f4147]">
+                    <div className="mt-1.5 text-xs text-[#cbd5e1] leading-relaxed italic bg-[#0f1218]/80 p-3 rounded-xl border border-[#222836]">
                       {msg.content}
                     </div>
                   )}
 
                   {/* Standard Speech */}
                   {msg.type === 'speech' && (
-                    <p className="mt-1 text-sm text-[#dbdee1] leading-relaxed break-words">
+                    <p className="mt-1 text-xs text-[#e2e8f0] leading-relaxed break-words font-normal">
                       "{msg.content}"
                     </p>
                   )}
 
                   {/* Action / Emote */}
                   {msg.type === 'action' && (
-                    <p className="mt-1 text-sm text-[#949ba4] italic flex items-center gap-1.5">
-                      <CornerDownRight size={13} className="text-[#5865f2]" />
+                    <p className="mt-1 text-xs text-[#94a3b8] italic flex items-center gap-1.5">
+                      <CornerDownRight size={12} className="text-[#e63946]" />
                       * {msg.senderName} {msg.content} *
                     </p>
                   )}
 
                   {/* Dice Roll Card */}
                   {msg.type === 'roll' && msg.roll && (
-                    <div className="mt-2 bg-[#2b2d31] border border-[#3f4147] rounded-xl p-3 max-w-md shadow-lg">
-                      <div className="flex items-center justify-between border-b border-[#3f4147] pb-2">
-                        <div className="flex items-center gap-2">
-                          <Dices size={16} className="text-[#eab308]" />
-                          <span className="text-xs font-bold text-white">{msg.content}</span>
+                    <div className="mt-2 bg-[#171b24] border border-[#262c3b] rounded-xl p-2.5 max-w-sm shadow-md">
+                      <div className="flex items-center justify-between border-b border-[#222736] pb-1.5 mb-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <Dices size={14} className="text-[#d4af37]" />
+                          <span className="text-[11px] font-bold text-white truncate max-w-[180px]">{msg.content}</span>
                         </div>
-                        <span className="text-xs font-mono font-semibold text-[#949ba4]">
+                        <span className="text-[11px] font-mono font-bold text-[#94a3b8]">
                           {msg.roll.formula}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="text-xs text-[#949ba4] font-mono">
+                      <div className="flex items-center justify-between">
+                        <div className="text-[11px] text-[#94a3b8] font-mono">
                           {msg.roll.breakdown}
                         </div>
 
                         <div className="flex items-center gap-2">
                           {msg.roll.isCritSuccess && (
-                            <span className="text-[10px] bg-[#23a55a] text-white font-bold px-2 py-0.5 rounded-full uppercase animate-pulse">
+                            <span className="text-[9px] bg-[#10b981] text-white font-extrabold px-1.5 py-0.5 rounded-full uppercase animate-pulse">
                               CRÍTICO!
                             </span>
                           )}
                           {msg.roll.isCritFailure && (
-                            <span className="text-[10px] bg-[#da373c] text-white font-bold px-2 py-0.5 rounded-full uppercase">
-                              FALHA CRÍTICA!
+                            <span className="text-[9px] bg-[#e63946] text-white font-extrabold px-1.5 py-0.5 rounded-full uppercase">
+                              FALHA!
                             </span>
                           )}
-                          <div className="text-lg font-black text-white bg-[#1e1f22] px-3 py-1 rounded-lg border border-[#3f4147]">
+                          <div className="text-base font-black text-white bg-[#0f1218] px-2.5 py-0.5 rounded-lg border border-[#2b3242]">
                             {msg.roll.total}
                           </div>
                         </div>
@@ -214,16 +207,16 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
         {/* AI Typing Indicator */}
         {isGeneratingAI && (
-          <div className="flex items-center gap-3 px-2 py-2 bg-[#2b2d31]/40 rounded-xl border border-[#5865f2]/40 animate-pulse">
-            <div className="w-8 h-8 rounded-full bg-[#5865f2] flex items-center justify-center text-white">
-              <Bot size={18} />
+          <div className="flex items-center gap-3 px-3 py-2.5 bg-[#181c26]/90 rounded-xl border border-[#e63946]/40 animate-pulse">
+            <div className="w-8 h-8 rounded-xl bg-[#e63946] flex items-center justify-center text-white shadow-md shadow-[#e63946]/30">
+              <Bot size={16} />
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#5865f2] font-semibold">
-              <span>O Mestre IA está narrando a história e consultando a memória do mundo...</span>
+            <div className="flex items-center gap-1.5 text-xs text-[#e63946] font-semibold">
+              <span>O Mestre IA está narrando a história...</span>
               <div className="flex gap-1">
-                <span className="w-1.5 h-1.5 bg-[#5865f2] rounded-full animate-bounce" />
-                <span className="w-1.5 h-1.5 bg-[#5865f2] rounded-full animate-bounce [animation-delay:0.2s]" />
-                <span className="w-1.5 h-1.5 bg-[#5865f2] rounded-full animate-bounce [animation-delay:0.4s]" />
+                <span className="w-1.5 h-1.5 bg-[#e63946] rounded-full animate-bounce" />
+                <span className="w-1.5 h-1.5 bg-[#e63946] rounded-full animate-bounce [animation-delay:0.2s]" />
+                <span className="w-1.5 h-1.5 bg-[#e63946] rounded-full animate-bounce [animation-delay:0.4s]" />
               </div>
             </div>
           </div>
@@ -234,25 +227,25 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
       {/* Quick Dice Bar (Collapsible) */}
       {showDiceQuickBar && (
-        <div className="px-4 py-2 bg-[#2b2d31] border-t border-[#1f2023] flex items-center gap-2 overflow-x-auto text-xs">
-          <span className="text-[11px] font-bold text-[#949ba4] uppercase">Rolar Rápido:</span>
+        <div className="px-3 py-2 bg-[#161a22] border-t border-[#1f2533] flex items-center gap-1.5 overflow-x-auto text-xs">
+          <span className="text-[10px] font-bold text-[#64748b] uppercase mr-1">Rolar:</span>
           {ruleset === 'gurps' ? (
             <>
               <button
-                onClick={() => onRollDice('3d6', 'Teste Básico GURPS')}
-                className="px-2.5 py-1 bg-[#35373c] hover:bg-[#5865f2] text-white font-bold rounded flex items-center gap-1"
+                onClick={() => onRollDice('3d6', 'Teste 3d6 GURPS')}
+                className="px-2.5 py-1 bg-[#222734] hover:bg-[#e63946] text-white font-bold rounded-lg flex items-center gap-1 text-xs transition-colors"
               >
                 <Dices size={12} /> 3d6
               </button>
               <button
                 onClick={() => onRollDice('1d6', 'Dano Menor')}
-                className="px-2 py-1 bg-[#35373c] hover:bg-[#5865f2] text-white rounded font-mono"
+                className="px-2 py-1 bg-[#222734] hover:bg-[#e63946] text-white rounded-lg font-mono text-xs transition-colors"
               >
                 1d6
               </button>
               <button
                 onClick={() => onRollDice('2d6', 'Dano Maior')}
-                className="px-2 py-1 bg-[#35373c] hover:bg-[#5865f2] text-white rounded font-mono"
+                className="px-2 py-1 bg-[#222734] hover:bg-[#e63946] text-white rounded-lg font-mono text-xs transition-colors"
               >
                 2d6
               </button>
@@ -261,7 +254,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             <>
               <button
                 onClick={() => onRollDice('1d20', 'Teste d20')}
-                className="px-2.5 py-1 bg-[#35373c] hover:bg-[#5865f2] text-white font-bold rounded flex items-center gap-1"
+                className="px-2.5 py-1 bg-[#222734] hover:bg-[#e63946] text-white font-bold rounded-lg flex items-center gap-1 text-xs transition-colors"
               >
                 <Dices size={12} /> 1d20
               </button>
@@ -269,7 +262,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 <button
                   key={d}
                   onClick={() => onRollDice(d, `Rolagem de ${d}`)}
-                  className="px-2 py-1 bg-[#35373c] hover:bg-[#5865f2] text-white rounded font-mono"
+                  className="px-2 py-1 bg-[#222734] hover:bg-[#e63946] text-white rounded-lg font-mono text-xs transition-colors"
                 >
                   {d}
                 </button>
@@ -280,19 +273,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       )}
 
       {/* Input Form Bar */}
-      <div className="p-4 bg-[#313338]">
+      <div className="p-3 bg-[#11141a] border-t border-[#1a1f29]">
         <form
           onSubmit={handleSend}
-          className="bg-[#383a40] rounded-xl p-2 flex flex-col gap-2 border border-[#3f4147] focus-within:border-[#5865f2]"
+          className="bg-[#161a22] rounded-xl p-2 flex flex-col gap-1.5 border border-[#232938] focus-within:border-[#e63946] transition-colors"
         >
           {/* Controls Bar: Speak as Character & Message Type */}
-          <div className="flex items-center justify-between text-xs text-[#dbdee1] border-b border-[#43464d] pb-1.5 px-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-[#949ba4]">Falando como:</span>
+          <div className="flex items-center justify-between text-xs text-[#94a3b8] border-b border-[#1f2533] pb-1 px-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-semibold text-[#64748b]">Como:</span>
               <select
                 value={selectedCharId}
                 onChange={(e) => setSelectedCharId(e.target.value)}
-                className="bg-[#2b2d31] text-xs font-bold text-white rounded px-2 py-0.5 border border-[#4e5058] focus:outline-none focus:border-[#5865f2]"
+                className="bg-[#1d222e] text-xs font-bold text-white rounded-md px-2 py-0.5 border border-[#2c3344] focus:outline-none focus:border-[#e63946]"
               >
                 {characters.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -303,8 +296,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
               {/* Elevation Badge of speaker */}
               {selectedChar?.elevation !== 0 && (
-                <span className="text-[10px] bg-[#eab308] text-black font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                  <Mountain size={11} />
+                <span className="text-[9px] bg-[#d4af37] text-black font-extrabold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                  <Mountain size={10} />
                   {selectedChar?.elevation > 0 ? `+${selectedChar.elevation}` : selectedChar?.elevation}m
                 </span>
               )}
@@ -314,8 +307,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               <button
                 type="button"
                 onClick={() => setMessageType('speech')}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                  messageType === 'speech' ? 'bg-[#5865f2] text-white' : 'text-[#949ba4] hover:text-white'
+                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                  messageType === 'speech' ? 'bg-[#e63946] text-white' : 'text-[#64748b] hover:text-white'
                 }`}
               >
                 Fala
@@ -323,21 +316,21 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               <button
                 type="button"
                 onClick={() => setMessageType('action')}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                  messageType === 'action' ? 'bg-[#5865f2] text-white' : 'text-[#949ba4] hover:text-white'
+                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                  messageType === 'action' ? 'bg-[#e63946] text-white' : 'text-[#64748b] hover:text-white'
                 }`}
               >
-                Ação (/me)
+                Ação
               </button>
               <button
                 type="button"
                 onClick={() => setShowDiceQuickBar(!showDiceQuickBar)}
-                className={`p-1 rounded text-[#949ba4] hover:text-white ${
-                  showDiceQuickBar ? 'text-[#eab308]' : ''
+                className={`p-1 rounded text-[#94a3b8] hover:text-white transition-colors ${
+                  showDiceQuickBar ? 'text-[#d4af37]' : ''
                 }`}
-                title="Dados Rápidos"
+                title="Atalhos de Dados"
               >
-                <Dices size={16} />
+                <Dices size={15} />
               </button>
             </div>
           </div>
@@ -348,19 +341,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={`Enviar mensagem em #${channelName}... (use /roll 1d20+4 ou /me ação)`}
-              className="flex-1 bg-transparent text-sm text-[#dbdee1] focus:outline-none placeholder-[#949ba4]"
+              placeholder={`Enviar em #${channelName}... (/roll 1d20+4)`}
+              className="flex-1 bg-transparent text-xs text-white focus:outline-none placeholder-[#64748b]"
             />
             <button
               type="submit"
               disabled={!inputText.trim()}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-1.5 rounded-lg transition-all ${
                 inputText.trim()
-                  ? 'bg-[#5865f2] hover:bg-[#4752c4] text-white'
-                  : 'text-[#4e5058] cursor-not-allowed'
+                  ? 'bg-[#e63946] hover:bg-[#d02e3b] text-white shadow-md shadow-[#e63946]/30'
+                  : 'text-[#475569] cursor-not-allowed'
               }`}
             >
-              <Send size={16} />
+              <Send size={14} />
             </button>
           </div>
         </form>

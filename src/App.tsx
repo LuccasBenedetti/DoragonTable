@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Campaign, 
   CharacterSheet, 
@@ -6,7 +6,9 @@ import {
   GameMode, 
   RulesetType, 
   Scene, 
-  LoreEntity 
+  LoreEntity,
+  Combatant,
+  CombatState 
 } from './types';
 import { CampaignSidebar } from './components/Sidebar/CampaignSidebar';
 import { ChannelSidebar } from './components/Sidebar/ChannelSidebar';
@@ -21,9 +23,25 @@ import { LANServerModal } from './components/GM/LANServerModal';
 import { CreateCampaignModal } from './components/Sidebar/CreateCampaignModal';
 import { AuthScreen, UserProfile } from './components/Auth/AuthScreen';
 import { HomeHub, FriendItem } from './components/Home/HomeHub';
+import { RightDock, RightDockTab } from './components/Dock/RightDock';
 import { rollDice } from './services/dice';
 import { AiMasterEngine } from './services/aiMaster';
-import { Map as MapIcon, MessageSquare, Columns, X, Copy, Check, UserPlus } from 'lucide-react';
+import { 
+  Map as MapIcon, 
+  MessageSquare, 
+  Columns, 
+  X, 
+  Copy, 
+  Check, 
+  UserPlus,
+  PanelLeftOpen,
+  PanelLeftClose,
+  PanelRightOpen,
+  PanelRightClose,
+  Shield,
+  Book,
+  Crown
+} from 'lucide-react';
 
 // Starter Campaigns Data to show D&D and GURPS
 const INITIAL_CAMPAIGNS: Campaign[] = [
@@ -319,8 +337,10 @@ export const App: React.FC = () => {
   // activeCampaignId is null when in Home (Friends & DMs hub)
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
   
-  // View Layout inside campaign: 'chat' | 'map' | 'split'
-  const [viewLayout, setViewLayout] = useState<'chat' | 'map' | 'split'>('chat');
+  // Layout Controls
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState<boolean>(true);
+  const [isRightDockOpen, setIsRightDockOpen] = useState<boolean>(true);
+  const [activeRightDockTab, setActiveRightDockTab] = useState<RightDockTab>('chat');
   
   // Modals
   const [showFullSheet, setShowFullSheet] = useState<CharacterSheet | null>(null);
@@ -334,6 +354,66 @@ export const App: React.FC = () => {
 
   // Selected Token / Character in Scene
   const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>('tok_dnd_1');
+
+  // Auto-Updater State
+  const [updateInfo, setUpdateInfo] = useState<{
+    status: 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error';
+    percent?: number;
+    version?: string;
+  }>({ status: 'idle' });
+
+  // Initial Session & Auto-Updater listener setup
+  useEffect(() => {
+    const win = window as any;
+
+    // Restore persistent session from Electron's native userData if available
+    if (win.doragonAPI?.getUserSession) {
+      win.doragonAPI.getUserSession().then((savedUser: UserProfile | null) => {
+        if (savedUser) {
+          setCurrentUser(savedUser);
+          try {
+            localStorage.setItem('doragontable_user', JSON.stringify(savedUser));
+          } catch {}
+        }
+      }).catch((err: any) => console.warn('[App] Could not read native session:', err));
+    }
+
+    // Subscribe to Auto-Updater IPC events
+    if (win.doragonAPI?.onUpdaterStatus) {
+      const unsubscribe = win.doragonAPI.onUpdaterStatus((data: any) => {
+        if (data.status === 'downloading') {
+          setUpdateInfo({ status: 'downloading', percent: data.percent });
+        } else if (data.status === 'downloaded') {
+          setUpdateInfo({ status: 'downloaded', version: data.info?.version });
+        } else if (data.status === 'available') {
+          setUpdateInfo({ status: 'available', version: data.info?.version });
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, []);
+
+  const handleLogin = (user: UserProfile) => {
+    setCurrentUser(user);
+    try {
+      localStorage.setItem('doragontable_user', JSON.stringify(user));
+    } catch {}
+    const win = window as any;
+    if (win.doragonAPI?.saveUserSession) {
+      win.doragonAPI.saveUserSession(user).catch(console.warn);
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('doragontable_user');
+    } catch {}
+    const win = window as any;
+    if (win.doragonAPI?.clearUserSession) {
+      win.doragonAPI.clearUserSession().catch(console.warn);
+    }
+  };
 
   // Messages State Map: [campaignId_channelId]: ChatMessage[]
   const [messagesMap, setMessagesMap] = useState<Record<string, ChatMessage[]>>({
@@ -363,13 +443,27 @@ export const App: React.FC = () => {
   const currentMessages = messagesMap[currentMessagesKey] || [];
 
   const charactersInScene = activeCampaign.characters.filter((c) => c.currentSceneId === activeScene.id);
+  const selectedToken = activeScene.tokens.find((t) => t.id === selectedTokenId);
+  const selectedCharacter = activeCampaign.characters.find((c) => c.id === selectedToken?.characterId) || charactersInScene[0] || activeCampaign.characters[0];
 
-  const handleLogin = (user: UserProfile) => {
-    setCurrentUser(user);
-    try {
-      localStorage.setItem('doragontable_user', JSON.stringify(user));
-    } catch {}
-  };
+  // Keyboard Shortcuts (Ctrl+B = toggle left channels, Ctrl+J = toggle right dock)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setIsLeftSidebarOpen((prev) => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        setIsRightDockOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleSelectCampaign = (id: string) => {
     setActiveCampaignId(id);
@@ -428,6 +522,35 @@ export const App: React.FC = () => {
           content
         );
 
+        // Execute action tags issued by AI
+        const execResult = AiMasterEngine.parseAndExecuteTacticalActions(
+          aiResponseText,
+          activeScene,
+          activeCampaign.characters
+        );
+
+        // Update scene tokens and characters if modified
+        setCampaigns((prev) =>
+          prev.map((c) =>
+            c.id === activeCampaign.id
+              ? {
+                  ...c,
+                  characters: execResult.updatedCharacters,
+                  scenes: c.scenes.map((s) => (s.id === execResult.updatedScene.id ? execResult.updatedScene : s)),
+                }
+              : c
+          )
+        );
+
+        // Execute any rolls the AI requested
+        for (const r of execResult.rollsToExecute) {
+          handleRollDice(r.formula, r.desc);
+        }
+
+        const actionNotices = execResult.actionsExecuted.length > 0
+          ? '\n\n' + execResult.actionsExecuted.map(a => a.description).join('\n')
+          : '';
+
         const aiMsg: ChatMessage = {
           id: 'ai_' + Date.now(),
           channelId: activeChannel.id,
@@ -435,7 +558,7 @@ export const App: React.FC = () => {
           senderName: 'Mestre IA',
           senderAvatar: '',
           type: 'narration',
-          content: aiResponseText,
+          content: execResult.cleanedText + actionNotices,
           isAI: true,
           timestamp: Date.now(),
         };
@@ -446,7 +569,7 @@ export const App: React.FC = () => {
         }));
 
         if (activeCampaign.aiSettings?.autoLogEntities) {
-          AiMasterEngine.extractNewEntities(activeCampaign, aiResponseText).then((newEntities) => {
+          AiMasterEngine.extractNewEntities(activeCampaign, execResult.cleanedText).then((newEntities) => {
             if (newEntities.length > 0) {
               setCampaigns((prev) =>
                 prev.map((c) =>
@@ -526,150 +649,580 @@ export const App: React.FC = () => {
     );
   };
 
+  // --- COMBAT & INITIATIVE TURN ORDER HANDLERS ---
+  const triggerAiNpcTurn = async (npcCharId: string, roundNumber: number) => {
+    const npcChar = activeCampaign.characters.find((c) => c.id === npcCharId);
+    if (!npcChar) return;
+
+    setIsGeneratingAI(true);
+    try {
+      const response = await AiMasterEngine.narrateNpcTurn(
+        activeCampaign,
+        activeScene,
+        charactersInScene,
+        currentMessages,
+        npcChar,
+        roundNumber
+      );
+
+      const execResult = AiMasterEngine.parseAndExecuteTacticalActions(
+        response,
+        activeScene,
+        activeCampaign.characters
+      );
+
+      setCampaigns((prev) =>
+        prev.map((c) =>
+          c.id === activeCampaign.id
+            ? {
+                ...c,
+                characters: execResult.updatedCharacters,
+                scenes: c.scenes.map((s) => (s.id === execResult.updatedScene.id ? execResult.updatedScene : s)),
+              }
+            : c
+        )
+      );
+
+      for (const r of execResult.rollsToExecute) {
+        handleRollDice(r.formula, r.desc);
+      }
+
+      const actionNotices = execResult.actionsExecuted.length > 0
+        ? '\n\n' + execResult.actionsExecuted.map((a) => a.description).join('\n')
+        : '';
+
+      const aiMsg: ChatMessage = {
+        id: 'ai_turn_' + Date.now(),
+        channelId: activeChannel.id,
+        senderId: 'ai_master',
+        senderName: `${npcChar.name} (IA)`,
+        senderAvatar: npcChar.avatar,
+        type: 'narration',
+        content: execResult.cleanedText + actionNotices,
+        isAI: true,
+        timestamp: Date.now(),
+      };
+
+      setMessagesMap((prev) => ({
+        ...prev,
+        [currentMessagesKey]: [...(prev[currentMessagesKey] || []), aiMsg],
+      }));
+    } catch (err) {
+      console.error('Failed to execute AI NPC Turn:', err);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  const handleStartCombat = () => {
+    if (charactersInScene.length === 0) return;
+
+    const turnOrder: Combatant[] = charactersInScene.map((char) => {
+      let init = 10;
+      if (char.ruleset === 'dnd5e') {
+        const dexMod = char.dnd?.stats?.dex !== undefined ? Math.floor((char.dnd.stats.dex - 10) / 2) : 0;
+        init = Math.floor(Math.random() * 20) + 1 + dexMod;
+      } else if (char.ruleset === 'gurps') {
+        const speed = char.gurps?.basicSpeed || 5.0;
+        const tiebreaker = (Math.floor(Math.random() * 6) + 1) / 10;
+        init = speed + tiebreaker;
+      } else {
+        init = Math.floor(Math.random() * 20) + 1;
+      }
+      return {
+        characterId: char.id,
+        name: char.name,
+        avatar: char.avatar,
+        initiative: init,
+        isNPC: char.isNPC,
+      };
+    }).sort((a, b) => b.initiative - a.initiative);
+
+    const newCombat: CombatState = {
+      isActive: true,
+      round: 1,
+      currentTurnIndex: 0,
+      turnOrder,
+    };
+
+    setCampaigns((prev) =>
+      prev.map((c) => (c.id === activeCampaign.id ? { ...c, combat: newCombat } : c))
+    );
+
+    const firstCombatant = turnOrder[0];
+    const firstToken = activeScene.tokens.find((t) => t.characterId === firstCombatant?.characterId);
+    if (firstToken) {
+      setSelectedTokenId(firstToken.id);
+    }
+
+    const orderList = turnOrder
+      .map((c, i) => `${i + 1}. **${c.name}** (${c.isNPC ? 'NPC' : 'PJ'}): Iniciativa ${c.initiative.toFixed(1)}`)
+      .join('\n');
+
+    const combatAnnounceMsg: ChatMessage = {
+      id: 'combat_' + Date.now(),
+      channelId: activeChannel.id,
+      senderId: 'system',
+      senderName: 'Mesa Tática',
+      senderAvatar: '',
+      type: 'system',
+      content: `⚔️ **INICIANDO COMBATE — RODADA 1**\n\n${orderList}\n\n⏱️ Primeiro a agir: **${firstCombatant.name}**!`,
+      timestamp: Date.now(),
+    };
+
+    setMessagesMap((prev) => ({
+      ...prev,
+      [currentMessagesKey]: [...(prev[currentMessagesKey] || []), combatAnnounceMsg],
+    }));
+
+    if (firstCombatant.isNPC && activeCampaign.gameMode === 'ai_master') {
+      setTimeout(() => {
+        triggerAiNpcTurn(firstCombatant.characterId, 1);
+      }, 500);
+    }
+  };
+
+  const handleNextTurn = () => {
+    if (!activeCampaign.combat?.isActive || !activeCampaign.combat.turnOrder.length) return;
+
+    const combat = activeCampaign.combat;
+    const nextIndex = (combat.currentTurnIndex + 1) % combat.turnOrder.length;
+    const nextRound = nextIndex === 0 ? combat.round + 1 : combat.round;
+
+    setCampaigns((prev) =>
+      prev.map((c) =>
+        c.id === activeCampaign.id
+          ? {
+              ...c,
+              combat: {
+                ...combat,
+                round: nextRound,
+                currentTurnIndex: nextIndex,
+              },
+            }
+          : c
+      )
+    );
+
+    const nextCombatant = combat.turnOrder[nextIndex];
+    const token = activeScene.tokens.find((t) => t.characterId === nextCombatant.characterId);
+    if (token) {
+      setSelectedTokenId(token.id);
+    }
+
+    const roundNotice = nextRound !== combat.round ? `\n\n🔔 **INÍCIO DA RODADA ${nextRound}!**` : '';
+    const turnMsg: ChatMessage = {
+      id: 'turn_' + Date.now(),
+      channelId: activeChannel.id,
+      senderId: 'system',
+      senderName: 'Mesa Tática',
+      senderAvatar: '',
+      type: 'system',
+      content: `⏱️ Turno de **${nextCombatant.name}** (${nextCombatant.isNPC ? 'NPC' : 'PJ'})!${roundNotice}`,
+      timestamp: Date.now(),
+    };
+
+    setMessagesMap((prev) => ({
+      ...prev,
+      [currentMessagesKey]: [...(prev[currentMessagesKey] || []), turnMsg],
+    }));
+
+    if (nextCombatant.isNPC && activeCampaign.gameMode === 'ai_master') {
+      setTimeout(() => {
+        triggerAiNpcTurn(nextCombatant.characterId, nextRound);
+      }, 600);
+    }
+  };
+
+  const handlePrevTurn = () => {
+    if (!activeCampaign.combat?.isActive || !activeCampaign.combat.turnOrder.length) return;
+    const combat = activeCampaign.combat;
+    const prevIndex = (combat.currentTurnIndex - 1 + combat.turnOrder.length) % combat.turnOrder.length;
+    const prevRound = combat.currentTurnIndex === 0 ? Math.max(1, combat.round - 1) : combat.round;
+
+    setCampaigns((prev) =>
+      prev.map((c) =>
+        c.id === activeCampaign.id
+          ? {
+              ...c,
+              combat: {
+                ...combat,
+                round: prevRound,
+                currentTurnIndex: prevIndex,
+              },
+            }
+          : c
+      )
+    );
+
+    const prevCombatant = combat.turnOrder[prevIndex];
+    const token = activeScene.tokens.find((t) => t.characterId === prevCombatant.characterId);
+    if (token) {
+      setSelectedTokenId(token.id);
+    }
+  };
+
+  const handleEndCombat = () => {
+    setCampaigns((prev) =>
+      prev.map((c) => (c.id === activeCampaign.id ? { ...c, combat: undefined } : c))
+    );
+
+    const endMsg: ChatMessage = {
+      id: 'combat_end_' + Date.now(),
+      channelId: activeChannel.id,
+      senderId: 'system',
+      senderName: 'Mesa Tática',
+      senderAvatar: '',
+      type: 'system',
+      content: `🏳️ **O combate foi encerrado.** Todos os combatentes saíram da ordem de iniciativa.`,
+      timestamp: Date.now(),
+    };
+
+    setMessagesMap((prev) => ({
+      ...prev,
+      [currentMessagesKey]: [...(prev[currentMessagesKey] || []), endMsg],
+    }));
+  };
+
   // If user is not authenticated, show AuthScreen
   if (!currentUser) {
     return <AuthScreen onSuccessLogin={handleLogin} />;
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#0d0f12] text-[#e2e8f0] font-sans">
-      {/* 1. Leftmost Server / Navigation Column */}
-      <CampaignSidebar
-        campaigns={campaigns}
-        activeCampaignId={activeCampaignId}
-        onSelectHome={() => setActiveCampaignId(null)}
-        onSelectCampaign={handleSelectCampaign}
-        onOpenCreateModal={() => setShowCreateCampaign(true)}
-        onOpenOllamaConfig={() => setShowOllamaConfig(true)}
-      />
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0d0f12] text-[#e2e8f0] font-sans">
+      {/* Auto-Updater Notification Banner */}
+      {updateInfo.status === 'downloaded' && (
+        <div className="bg-gradient-to-r from-[#10b981] via-[#059669] to-[#047857] text-white px-4 py-2.5 flex items-center justify-between text-xs font-bold shadow-2xl z-50 animate-in slide-in-from-top border-b border-[#059669]/50 select-none">
+          <div className="flex items-center gap-2.5">
+            <Sparkles size={16} className="text-yellow-300 animate-pulse" />
+            <span>
+              Nova versão do DoragonTable ({updateInfo.version || 'mais recente'}) pronta para instalar!
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => (window as any).doragonAPI?.installUpdate?.()}
+              className="px-3 py-1 bg-white hover:bg-[#f1f5f9] text-[#047857] text-xs font-black rounded-lg shadow transition-all transform hover:scale-105"
+            >
+              Reiniciar e Atualizar Agora
+            </button>
+            <button
+              onClick={() => setUpdateInfo({ status: 'idle' })}
+              className="p-1 text-white/80 hover:text-white"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
 
-      {/* 2. Main Center Body: Home Hub OR Campaign View */}
-      {activeCampaignId === null ? (
-        /* HOME / FRIENDS & DMS VIEW */
-        <HomeHub
-          currentUser={currentUser}
+      {updateInfo.status === 'downloading' && (
+        <div className="bg-[#151922] border-b border-[#242b3b] text-[#94a3b8] px-4 py-2 flex items-center justify-between text-xs z-50 select-none">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#3b82f6] animate-ping" />
+            <span className="font-semibold text-white">
+              Baixando atualização em segundo plano... {updateInfo.percent || 0}%
+            </span>
+          </div>
+          <div className="w-32 bg-[#0d0f14] h-2 rounded-full overflow-hidden border border-[#262c38]">
+            <div
+              className="bg-[#3b82f6] h-full transition-all duration-300"
+              style={{ width: `${updateInfo.percent || 0}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 flex overflow-hidden">
+        {/* 1. Leftmost Server / Navigation Column */}
+        <CampaignSidebar
           campaigns={campaigns}
+          activeCampaignId={activeCampaignId}
+          onSelectHome={() => setActiveCampaignId(null)}
           onSelectCampaign={handleSelectCampaign}
-          onInviteFriendToCampaign={(friend, cId) => {
-            // Handled inside modal
-          }}
+          onOpenCreateModal={() => setShowCreateCampaign(true)}
+          onOpenOllamaConfig={() => setShowOllamaConfig(true)}
         />
-      ) : (
-        /* CAMPAIGN INTERFACE VIEW */
-        <div className="flex-1 flex overflow-hidden">
-          {/* Campaign Channels & Navigation */}
-          <ChannelSidebar
-            campaign={activeCampaign}
-            activeChannelId={activeChannel.id}
-            currentUser={currentUser}
-            onSelectChannel={handleSelectChannel}
-            onToggleGameMode={handleToggleGameMode}
-            onOpenMap={() => setViewLayout((prev) => (prev === 'map' ? 'chat' : 'map'))}
-            onOpenLoreBible={() => setShowLoreBible(true)}
-            onOpenGMScreen={() => setShowGMScreen(true)}
-            onOpenCharacterSheet={() => {
-              const char = activeCampaign.characters[0];
-              if (char) setShowFullSheet(char);
-            }}
-            onOpenInviteModal={() => setShowInviteCampaignModal(true)}
-          />
 
-          {/* Center Chat & VTT Content Area */}
-          <div className="flex-1 flex flex-col h-full overflow-hidden">
-            {/* Top Bar Switcher */}
-            <div className="h-11 px-4 bg-[#14171e] border-b border-[#1f242e] flex items-center justify-between text-xs select-none">
-              {/* Scene Tokens Bar */}
-              <div className="flex-1 overflow-hidden mr-4">
+        {/* 2. Main Center Body: Home Hub OR Campaign View */}
+        {activeCampaignId === null ? (
+          /* HOME / FRIENDS & DMS VIEW */
+          <HomeHub
+            currentUser={currentUser}
+            campaigns={campaigns}
+            onSelectCampaign={handleSelectCampaign}
+            onInviteFriendToCampaign={(friend, cId) => {
+              // Handled inside modal
+            }}
+            onLogout={handleLogout}
+          />
+        ) : (
+          /* CAMPAIGN INTERFACE VIEW */
+          <div className="flex-1 flex overflow-hidden">
+            {/* Collapsible Campaign Channels & Navigation */}
+            {isLeftSidebarOpen && (
+              <ChannelSidebar
+                campaign={activeCampaign}
+                activeChannelId={activeChannel.id}
+                currentUser={currentUser}
+                onSelectChannel={handleSelectChannel}
+                onToggleGameMode={handleToggleGameMode}
+                onOpenMap={() => {
+                  // Toggle right dock to give pure map focus
+                  setIsRightDockOpen((prev) => !prev);
+                }}
+                onOpenLoreBible={() => {
+                  setActiveRightDockTab('lore');
+                  setIsRightDockOpen(true);
+                }}
+                onOpenGMScreen={() => {
+                  setActiveRightDockTab('gm');
+                  setIsRightDockOpen(true);
+                }}
+                onOpenCharacterSheet={() => {
+                  setActiveRightDockTab('sheet');
+                  setIsRightDockOpen(true);
+                }}
+                onOpenInviteModal={() => setShowInviteCampaignModal(true)}
+                onCollapse={() => setIsLeftSidebarOpen(false)}
+                onLogout={handleLogout}
+              />
+            )}
+
+          {/* Center Tactical Canvas & Right Multi-Dock */}
+          <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0a0c10]">
+            {/* Top Command Bar */}
+            <div className="h-11 px-3 bg-[#131720] border-b border-[#1f2533] flex items-center justify-between text-xs select-none shadow-sm">
+              {/* Left Part: Expand Left Sidebar button + Active Scene Info */}
+              <div className="flex items-center gap-2">
+                {!isLeftSidebarOpen && (
+                  <button
+                    onClick={() => setIsLeftSidebarOpen(true)}
+                    className="p-1.5 rounded-lg bg-[#1a1f2c] hover:bg-[#242b3d] text-[#94a3b8] hover:text-white border border-[#262d3c] transition-colors"
+                    title="Expandir Canais (Ctrl+B)"
+                  >
+                    <PanelLeftOpen size={14} />
+                  </button>
+                )}
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-[#e63946] shadow-[0_0_8px_#e63946]" />
+                  <span className="font-extrabold text-xs text-white truncate max-w-[150px]">
+                    {activeScene.name}
+                  </span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] bg-[#0d0f14] px-1.5 py-0.5 rounded border border-[#1f2533]">
+                    {activeScene.gridType === 'hex' ? 'Hex' : 'Quad'} {activeScene.gridSize}px
+                  </span>
+                </div>
+              </div>
+
+              {/* Center Part: Tactical Initiative / Scene Tokens Bar */}
+              <div className="flex-1 overflow-hidden mx-3 max-w-xl">
                 <SceneTokensBar
                   characters={charactersInScene}
-                  selectedCharacterId={
-                    activeScene.tokens.find((t) => t.id === selectedTokenId)?.characterId
-                  }
+                  selectedCharacterId={selectedCharacter?.id}
+                  combat={activeCampaign.combat}
+                  isGM={activeCampaign.isHost}
                   onSelectCharacter={(charId) => {
                     const token = activeScene.tokens.find((t) => t.characterId === charId);
                     if (token) setSelectedTokenId(token.id);
                   }}
                   onOpenFullSheet={(char) => setShowFullSheet(char)}
                   onUpdateHp={handleUpdateHp}
+                  onStartCombat={handleStartCombat}
+                  onEndCombat={handleEndCombat}
+                  onNextTurn={handleNextTurn}
+                  onPrevTurn={handlePrevTurn}
                 />
               </div>
 
-              {/* Layout Switcher */}
-              <div className="flex items-center gap-1 bg-[#101318] p-1 rounded-xl border border-[#232834]">
+              {/* Right Part: Direct Dock Tab Buttons & Toggle */}
+              <div className="flex items-center gap-1 bg-[#0d0f14] p-1 rounded-xl border border-[#1f2533]">
                 <button
-                  onClick={() => setViewLayout('chat')}
-                  className={`px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
-                    viewLayout === 'chat' ? 'bg-[#e63946] text-white shadow' : 'text-[#94a3b8] hover:text-white'
+                  onClick={() => {
+                    setActiveRightDockTab('chat');
+                    setIsRightDockOpen(true);
+                  }}
+                  className={`px-2 py-1 rounded-lg flex items-center gap-1 text-[11px] font-bold transition-all ${
+                    isRightDockOpen && activeRightDockTab === 'chat'
+                      ? 'bg-[#e63946] text-white shadow-sm'
+                      : 'text-[#94a3b8] hover:text-white'
                   }`}
-                  title="Apenas Chat"
+                  title="Abrir Chat da Sessão"
                 >
-                  <MessageSquare size={14} />
-                  Chat
+                  <MessageSquare size={13} />
+                  <span>Chat</span>
                 </button>
                 <button
-                  onClick={() => setViewLayout('split')}
-                  className={`px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
-                    viewLayout === 'split' ? 'bg-[#e63946] text-white shadow' : 'text-[#94a3b8] hover:text-white'
+                  onClick={() => {
+                    setActiveRightDockTab('sheet');
+                    setIsRightDockOpen(true);
+                  }}
+                  className={`px-2 py-1 rounded-lg flex items-center gap-1 text-[11px] font-bold transition-all ${
+                    isRightDockOpen && activeRightDockTab === 'sheet'
+                      ? 'bg-[#e63946] text-white shadow-sm'
+                      : 'text-[#94a3b8] hover:text-white'
                   }`}
-                  title="Tela Dividida (Mapa + Chat)"
+                  title="Abrir Ficha de Personagem"
                 >
-                  <Columns size={14} />
-                  Divisão
+                  <Shield size={13} />
+                  <span>Ficha</span>
                 </button>
                 <button
-                  onClick={() => setViewLayout('map')}
-                  className={`px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all ${
-                    viewLayout === 'map' ? 'bg-[#e63946] text-white shadow' : 'text-[#94a3b8] hover:text-white'
+                  onClick={() => {
+                    setActiveRightDockTab('lore');
+                    setIsRightDockOpen(true);
+                  }}
+                  className={`px-2 py-1 rounded-lg flex items-center gap-1 text-[11px] font-bold transition-all ${
+                    isRightDockOpen && activeRightDockTab === 'lore'
+                      ? 'bg-[#e63946] text-white shadow-sm'
+                      : 'text-[#94a3b8] hover:text-white'
                   }`}
-                  title="Apenas Mapa Tático"
+                  title="Abrir Bíblia de Lore"
                 >
-                  <MapIcon size={14} />
-                  Mapa
+                  <Book size={13} />
+                  <span>Lore</span>
+                </button>
+                {activeCampaign.isHost && (
+                  <button
+                    onClick={() => {
+                      setActiveRightDockTab('gm');
+                      setIsRightDockOpen(true);
+                    }}
+                    className={`px-2 py-1 rounded-lg flex items-center gap-1 text-[11px] font-bold transition-all ${
+                      isRightDockOpen && activeRightDockTab === 'gm'
+                        ? 'bg-[#d4af37] text-black shadow-sm font-black'
+                        : 'text-[#d4af37] hover:bg-[#d4af37]/20'
+                    }`}
+                    title="Escudo do Mestre (Segredos)"
+                  >
+                    <Crown size={13} />
+                    <span>Mestre</span>
+                  </button>
+                )}
+
+                <div className="w-[1px] h-3.5 bg-[#232838] mx-0.5" />
+
+                <button
+                  onClick={() => setIsRightDockOpen(!isRightDockOpen)}
+                  className={`p-1 rounded-lg transition-colors ${
+                    !isRightDockOpen
+                      ? 'text-[#e63946] hover:bg-[#1a1f2c]'
+                      : 'text-[#64748b] hover:text-white'
+                  }`}
+                  title={isRightDockOpen ? 'Recolher Painel (Maximizar Mapa)' : 'Expandir Painel'}
+                >
+                  {isRightDockOpen ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
                 </button>
               </div>
             </div>
 
-            {/* Main Area */}
-            <div className="flex-1 flex overflow-hidden">
-              {(viewLayout === 'map' || viewLayout === 'split') && (
-                <div className={`h-full ${viewLayout === 'split' ? 'w-1/2 border-r border-[#1f242e]' : 'w-full'}`}>
-                  <TacticalMap
-                    scene={activeScene}
-                    isGM={activeCampaign.isHost}
-                    selectedTokenId={selectedTokenId}
-                    onSelectToken={(id) => setSelectedTokenId(id)}
-                    onUpdateTokenPosition={handleUpdateTokenPosition}
-                    onUpdateScene={(newScene) => {
-                      setCampaigns((prev) =>
-                        prev.map((c) =>
-                          c.id === activeCampaign.id
-                            ? {
-                                ...c,
-                                scenes: c.scenes.map((s) => (s.id === newScene.id ? newScene : s)),
-                              }
-                            : c
-                        )
-                      );
-                    }}
-                  />
-                </div>
-              )}
+            {/* Viewport: Tactical Map Canvas + Right Multi-Dock */}
+            <div className="flex-1 flex overflow-hidden relative">
+              {/* Tactical Map (Takes all remaining width) */}
+              <div className="flex-1 h-full overflow-hidden relative">
+                <TacticalMap
+                  scene={activeScene}
+                  isGM={activeCampaign.isHost}
+                  playerCharacterId={activeCampaign.activeCharacterId}
+                  selectedTokenId={selectedTokenId}
+                  activeCombatTokenId={
+                    activeCampaign.combat?.isActive
+                      ? activeScene.tokens.find(
+                          (t) =>
+                            t.characterId ===
+                            activeCampaign.combat?.turnOrder[activeCampaign.combat.currentTurnIndex]?.characterId
+                        )?.id
+                      : undefined
+                  }
+                  onSelectToken={(id) => {
+                    setSelectedTokenId(id);
+                  }}
+                  onUpdateTokenPosition={handleUpdateTokenPosition}
+                  onUpdateScene={(newScene) => {
+                    setCampaigns((prev) =>
+                      prev.map((c) =>
+                        c.id === activeCampaign.id
+                          ? {
+                              ...c,
+                              scenes: c.scenes.map((s) => (s.id === newScene.id ? newScene : s)),
+                            }
+                          : c
+                      )
+                    );
+                  }}
+                  onOpenSheet={(charId) => {
+                    const char = activeCampaign.characters.find((c) => c.id === charId);
+                    if (char) setShowFullSheet(char);
+                  }}
+                />
+              </div>
 
-              {(viewLayout === 'chat' || viewLayout === 'split') && (
-                <div className={`h-full ${viewLayout === 'split' ? 'w-1/2' : 'w-full'}`}>
-                  <ChatArea
-                    channelName={activeChannel.name}
-                    messages={currentMessages}
-                    characters={activeCampaign.characters}
-                    activeCharacterId={activeCampaign.activeCharacterId}
-                    isAIMasterMode={activeCampaign.gameMode === 'ai_master'}
-                    isGeneratingAI={isGeneratingAI}
-                    ruleset={activeCampaign.ruleset}
-                    onSendMessage={handleSendMessage}
-                    onRollDice={handleRollDice}
-                  />
-                </div>
-              )}
+              {/* Right Multi-Dock */}
+              <RightDock
+                isOpen={isRightDockOpen}
+                activeTab={activeRightDockTab}
+                onSelectTab={setActiveRightDockTab}
+                onToggleOpen={() => setIsRightDockOpen(!isRightDockOpen)}
+                campaign={activeCampaign}
+                activeChannel={activeChannel}
+                activeScene={activeScene}
+                selectedCharacter={selectedCharacter}
+                messages={currentMessages}
+                isGeneratingAI={isGeneratingAI}
+                onSendMessage={handleSendMessage}
+                onRollDice={handleRollDice}
+                onOpenFullSheet={(char) => setShowFullSheet(char)}
+                onUpdateHp={handleUpdateHp}
+                onUpdateGmNotes={(notes) => {
+                  setCampaigns((prev) =>
+                    prev.map((c) => (c.id === activeCampaign.id ? { ...c, gmSecretNotes: notes } : c))
+                  );
+                }}
+                onAddNPC={(npc) => {
+                  setCampaigns((prev) =>
+                    prev.map((c) => {
+                      if (c.id !== activeCampaign.id) return c;
+                      const newToken = {
+                        id: 'tok_' + Date.now(),
+                        characterId: npc.id,
+                        name: npc.name,
+                        avatar: '',
+                        x: Math.floor(Math.random() * 8 + 5),
+                        y: Math.floor(Math.random() * 8 + 5),
+                        elevation: 0,
+                        size: 1,
+                        sightRadius: 6,
+                        statusConditions: [],
+                        color: '#f59e0b',
+                      };
+                      return {
+                        ...c,
+                        characters: [...c.characters, npc],
+                        scenes: c.scenes.map((s) =>
+                          s.id === activeScene.id ? { ...s, tokens: [...s.tokens, newToken] } : s
+                        ),
+                      };
+                    })
+                  );
+                }}
+                onAddLoreEntity={(entity) => {
+                  setCampaigns((prev) =>
+                    prev.map((c) =>
+                      c.id === activeCampaign.id ? { ...c, loreEntities: [...c.loreEntities, entity] } : c
+                    )
+                  );
+                }}
+                onDeleteLoreEntity={(id) => {
+                  setCampaigns((prev) =>
+                    prev.map((c) =>
+                      c.id === activeCampaign.id
+                        ? { ...c, loreEntities: c.loreEntities.filter((e) => e.id !== id) }
+                        : c
+                    )
+                  );
+                }}
+              />
             </div>
           </div>
         </div>
@@ -870,6 +1423,7 @@ export const App: React.FC = () => {
           setActiveCampaignId(newCamp.id);
         }}
       />
+      </div>
     </div>
   );
 };

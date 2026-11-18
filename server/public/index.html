@@ -83,7 +83,7 @@
         <button onclick="openRegisterModal()" class="px-4 py-2 text-xs font-bold text-white hover:text-[#e63946] transition-colors">
           Criar Conta
         </button>
-        <a href="#download" class="px-5 py-2.5 bg-[#e63946] hover:bg-[#d02e3b] text-white text-xs font-extrabold rounded-xl shadow-lg shadow-[#e63946]/25 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+        <a href="javascript:void(0)" onclick="startInstallerDownload()" class="px-5 py-2.5 bg-[#e63946] hover:bg-[#d02e3b] text-white text-xs font-extrabold rounded-xl shadow-lg shadow-[#e63946]/25 transition-all transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           Baixar App (.exe)
         </a>
@@ -116,7 +116,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </button>
 
-        <a href="#" class="w-full sm:w-auto px-7 py-4 bg-[#161a22] hover:bg-[#202633] text-white font-bold text-sm rounded-2xl border border-[#2b3345] flex items-center justify-center gap-2.5 transition-all">
+        <a href="javascript:void(0)" onclick="startInstallerDownload()" class="w-full sm:w-auto px-7 py-4 bg-[#161a22] hover:bg-[#202633] text-white font-bold text-sm rounded-2xl border border-[#2b3345] flex items-center justify-center gap-2.5 transition-all cursor-pointer">
           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.902-1.799"/></svg>
           Baixar DoragonTable (.exe)
         </a>
@@ -299,7 +299,7 @@
       <div id="regSuccess" class="hidden mt-4 p-4 bg-[#10b981]/15 border border-[#10b981]/30 rounded-2xl text-xs text-center space-y-2">
         <div class="text-[#10b981] font-bold">✓ Conta criada com sucesso!</div>
         <div class="text-[#e2e8f0] text-[11px]" id="regUserTag"></div>
-        <a href="#download" onclick="closeRegisterModal()" class="inline-block mt-2 px-4 py-2 bg-[#10b981] text-white rounded-xl font-bold">
+        <a href="javascript:void(0)" onclick="closeRegisterModal(); startInstallerDownload();" class="inline-block mt-2 px-4 py-2 bg-[#10b981] text-white rounded-xl font-bold cursor-pointer">
           Baixar DoragonTable para Windows
         </a>
       </div>
@@ -311,7 +311,7 @@
     <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
       <div>© 2026 DoragonTable. Todos os direitos reservados.</div>
       <div class="flex items-center gap-6">
-        <a href="#download" class="hover:text-white transition-colors">Download</a>
+        <a href="javascript:void(0)" onclick="startInstallerDownload()" class="hover:text-white transition-colors cursor-pointer">Download (.exe)</a>
         <a href="https://supabase.com" target="_blank" class="hover:text-white transition-colors">Supabase DB</a>
         <a href="https://vercel.com" target="_blank" class="hover:text-white transition-colors">Vercel Server</a>
       </div>
@@ -334,6 +334,33 @@
       document.getElementById('regForm').classList.add('hidden');
       document.getElementById('regSuccess').classList.remove('hidden');
       document.getElementById('regUserTag').innerText = 'Sua Tag oficial: ' + user + '#' + tag;
+      // Trigger download automatically after register
+      startInstallerDownload();
+    }
+    function startInstallerDownload() {
+      // 1. Direct local file download (works when opening index.html or running local server)
+      const localUrl = 'downloads/DoragonTable-Setup.exe';
+      const apiUrl = '/api/download';
+      const githubUrl = 'https://github.com/LuccasBenedetti/DoragonTable/releases/latest/download/DoragonTable-Setup-1.0.0.exe';
+
+      const link = document.createElement('a');
+      link.href = localUrl;
+      link.download = 'DoragonTable-Setup.exe';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // 2. Fallback to API redirect or GitHub releases if local file isn't reachable
+      setTimeout(() => {
+        try {
+          const fallback = document.createElement('a');
+          fallback.href = apiUrl;
+          fallback.target = '_self';
+          document.body.appendChild(fallback);
+          fallback.click();
+          document.body.removeChild(fallback);
+        } catch {}
+      }, 1000);
     }
   </script>
 

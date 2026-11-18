@@ -31,6 +31,22 @@ export interface ElevationZone {
   color: string;
 }
 
+export interface Combatant {
+  characterId: string;
+  name: string;
+  avatar: string;
+  initiative: number;
+  isNPC: boolean;
+  hasActedThisRound?: boolean;
+}
+
+export interface CombatState {
+  isActive: boolean;
+  round: number;
+  currentTurnIndex: number;
+  turnOrder: Combatant[];
+}
+
 export interface MapToken {
   id: string;
   characterId: string;
@@ -186,4 +202,5 @@ export interface Campaign {
     systemPrompt: string;
     autoLogEntities: boolean;
   };
+  combat?: CombatState;
 }
